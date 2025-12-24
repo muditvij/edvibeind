@@ -1,0 +1,3555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EdVibe - Ultimate Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    <style>
+        /* GLOBAL DROPDOWN FIX */
+        select {
+            max-height: 200px;
+            overflow-y: auto;
+            /* Fix for mobile styling */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* Custom Scrollbar for Chat & Notes */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            pointer-events: none;
+        }
+
+        /* CHAT BUBBLES */
+        .chat-bubble-me {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-radius: 18px 18px 0 18px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .chat-bubble-peer {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e5e7eb;
+            border-radius: 18px 18px 18px 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* SCORE CARD */
+        .score-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        /* NOTIFICATION BADGE */
+        .nav-badge {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 10px;
+            height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            border: 2px solid #0b0f19;
+            display: none;
+        }
+
+        .nav-btn-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* RESPONSIVE TWEAKS */
+        @media (max-width: 768px) {
+            .glass-panel {
+                padding: 1rem !important;
+            }
+
+            .text-huge {
+                font-size: 2rem !important;
+            }
+
+            /* Sandbox responsive */
+            .sandbox-container {
+                flex-direction: column !important;
+                height: auto !important;
+                min-height: 100vh;
+            }
+
+            .sandbox-column {
+                width: 100% !important;
+                min-height: 300px;
+            }
+
+            #sandbox-challenge-display {
+                max-height: 150px !important;
+            }
+
+            .sandbox-controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .mobile-hidden {
+                display: none !important;
+            }
+
+            .mobile-block {
+                display: block !important;
+            }
+
+            .mobile-flex {
+                display: flex !important;
+            }
+
+            .mobile-text-sm {
+                font-size: 0.875rem !important;
+            }
+
+            .mobile-text-xs {
+                font-size: 0.75rem !important;
+            }
+
+            .mobile-p-2 {
+                padding: 0.5rem !important;
+            }
+
+            .mobile-p-3 {
+                padding: 0.75rem !important;
+            }
+
+            /* Chat responsive */
+            .chat-container {
+                height: calc(100vh - 200px) !important;
+            }
+
+            .peer-list {
+                max-height: 200px !important;
+            }
+        }
+
+        /* Better touch targets for mobile */
+        button,
+        input,
+        select,
+        textarea {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevent text overflow */
+        .truncate-2-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0b0f19;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-high {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #ec4899, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-locked {
+            filter: grayscale(100%)opacity(0.4);
+        }
+
+        .badge-unlocked {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            70% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: #6366f1;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .pulse-ring {
+            animation: pulseRing 2s infinite;
+        }
+
+        @keyframes pulseRing {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+
+        /* Video fix */
+        .video-placeholder {
+            background: linear-gradient(45deg, #0b0f19, #1e293b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Chat improvements */
+        .chat-messages {
+            scroll-behavior: smooth;
+        }
+
+        /* Sandbox mobile optimization */
+        .sandbox-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sandbox-controls select,
+        .sandbox-controls input,
+        .sandbox-controls button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Notes section improvement */
+      .notes-section {
+            min-height: 200px;
+        }
+        
+       /* AI DOUBT CHAT */
+        .doubt-chat-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .doubt-chat-visible {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        /* AUTH ANIMATIONS */
+        .float-anim { animation: float 6s ease-in-out infinite; }
+        .float-anim-delay-1 { animation-delay: 2s; }
+        .float-anim-delay-2 { animation-delay: 4s; }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .bg-grid-pattern {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0b0f19] min-h-screen text-gray-100" oncontextmenu="return false">
+    <audio id="test-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="app"></div>
+    <script>
+        // ================= ANTI-INSPECT PROTECTION =================
+       
+        // ================= CONFIGURATION =================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCoeepu3AoFVfbJv1kg8Wm9zaWfFcCJjv0",
+            authDomain: "chatapp-fec7e.firebaseapp.com",
+            projectId: "chatapp-fec7e",
+            storageBucket: "chatapp-fec7e.firebasestorage.app",
+            messagingSenderId: "399732763036",
+            appId: "1:399732763036:web:ce28a4d7f94406f7afc059",
+            measurementId: "G-QS94F1S8XQ"
+        };
+
+        const CONFIG = {
+            geminiKey: "AIzaSyBQTj5MdiGVR6ijtdSo7zNzQIm3f8KJNqU",
+            youtubeKey: "AIzaSyB7DIo8QMScO0c-bpksqyLDSmg0bR8uw70"
+        };
+
+        // ================= FIREBASE INITIALIZATION =================
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const analytics = firebase.analytics();
+
+        // ================= BADGES & SYLLABUS =================
+        const BADGES = {
+            'newbie': { id: 'newbie', icon: '🚀', name: 'Liftoff', desc: 'Started your journey', xp: 50, tier: 'bronze' },
+            'scholar': { id: 'scholar', icon: '📖', name: 'Scholar', desc: 'Completed first lesson', xp: 100, tier: 'bronze' },
+            'quiz_master': { id: 'quiz_master', icon: '🧠', name: 'Brainiac', desc: 'Scored 100% on quiz', xp: 150, tier: 'silver' },
+            'night_owl': { id: 'night_owl', icon: '🦉', name: 'Night Owl', desc: 'Studied after 10 PM', xp: 75, tier: 'bronze' },
+            'streak_3': { id: 'streak_3', icon: '🔥', name: 'On Fire', desc: '3 Day Login Streak', xp: 200, tier: 'silver' },
+            'streak_7': { id: 'streak_7', icon: '🌟', name: 'Weekly Warrior', desc: '7 Day Login Streak', xp: 500, tier: 'gold' },
+            'streak_30': { id: 'streak_30', icon: '👑', name: 'Legendary', desc: '30 Day Login Streak', xp: 2000, tier: 'platinum' },
+            'socialite': { id: 'socialite', icon: '💬', name: 'Connector', desc: 'Sent 10 messages', xp: 150, tier: 'bronze' },
+            'perfectionist': { id: 'perfectionist', icon: '🎯', name: 'Perfectionist', desc: 'Perfect score in all quizzes', xp: 1000, tier: 'platinum' },
+            'speedster': { id: 'speedster', icon: '⚡', name: 'Speedster', desc: 'Complete quiz under 1 min', xp: 300, tier: 'silver' },
+            'explorer': { id: 'explorer', icon: '🧭', name: 'Explorer', desc: 'Visit all subjects', xp: 400, tier: 'silver' },
+            'bookworm': { id: 'bookworm', icon: '📚', name: 'Bookworm', desc: 'Read 100 pages', xp: 500, tier: 'gold' },
+            'debater': { id: 'debater', icon: '🎤', name: 'Debater', desc: 'Participate in 5 discussions', xp: 300, tier: 'silver' },
+            'helper': { id: 'helper', icon: '🤝', name: 'Helper', desc: 'Help 5 classmates', xp: 400, tier: 'silver' },
+            'early_bird': { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Study before 6 AM', xp: 200, tier: 'bronze' },
+            'marathon': { id: 'marathon', icon: '🏃', name: 'Marathon', desc: 'Study 5 hours continuously', xp: 800, tier: 'gold' },
+            'polyglot': { id: 'polyglot', icon: '🌐', name: 'Polyglot', desc: 'Learn 3 languages', xp: 1500, tier: 'platinum' },
+            'scientist': { id: 'scientist', icon: '🔬', name: 'Scientist', desc: 'Complete all science topics', xp: 1200, tier: 'platinum' },
+            'mathematician': { id: 'mathematician', icon: '📐', name: 'Mathematician', desc: 'Complete all math topics', xp: 1200, tier: 'platinum' },
+            'historian': { id: 'historian', icon: '🏛️', name: 'Historian', desc: 'Complete all history topics', xp: 1000, tier: 'platinum' },
+            'test_champion': { id: 'test_champion', icon: '🏆', name: 'Test Champion', desc: 'Top rank in monthly test', xp: 1500, tier: 'platinum' },
+            'consistency_king': { id: 'consistency_king', icon: '👑', name: 'Consistency King', desc: '30 days learning streak', xp: 2000, tier: 'platinum' },
+            'quick_learner': { id: 'quick_learner', icon: '🚀', name: 'Quick Learner', desc: 'Complete course 2x faster', xp: 800, tier: 'gold' },
+            'note_taker': { id: 'note_taker', icon: '📝', name: 'Note Taker', desc: 'Take 100 notes', xp: 500, tier: 'silver' },
+            'video_binger': { id: 'video_binger', icon: '🎬', name: 'Video Binger', desc: 'Watch 50 videos', xp: 600, tier: 'silver' },
+            'question_master': { id: 'question_master', icon: '❓', name: 'Question Master', desc: 'Ask 50 questions', xp: 400, tier: 'silver' },
+            'accuracy_90': { id: 'accuracy_90', icon: '🎯', name: 'Sharpshooter', desc: '90%+ accuracy in tests', xp: 1000, tier: 'gold' },
+            'completionist': { id: 'completionist', icon: '✅', name: 'Completionist', desc: 'Complete entire syllabus', xp: 3000, tier: 'platinum' },
+            'peer_mentor': { id: 'peer_mentor', icon: '👨‍🏫', name: 'Peer Mentor', desc: 'Mentor 10 students', xp: 1500, tier: 'platinum' },
+            'weekend_warrior': { id: 'weekend_warrior', icon: '⚔️', name: 'Weekend Warrior', desc: 'Complete weekend challenges', xp: 700, tier: 'gold' },
+            'all_rounder': { id: 'all_rounder', icon: '🦸', name: 'All Rounder', desc: 'Excel in all subjects', xp: 2500, tier: 'platinum' }
+        };
+const SYLLABUS = {
+            "6th": {
+                "Mathematics": ["Knowing Our Numbers", "Whole Numbers", "Playing With Numbers", "Basic Geometrical Ideas", "Integers", "Fractions", "Decimals", "Data Handling", "Mensuration", "Algebra", "Ratio & Proportion", "Symmetry", "Practical Geometry"],
+                "Science": ["Food: Where Does It Come From?", "Components of Food", "Fibre to Fabric", "Sorting Materials into Groups", "Separation of Substances", "Changes Around Us", "Getting to Know Plants", "Body Movements", "The Living Organisms", "Motion & Measurement", "Light, Shadows & Reflections", "Electricity & Circuits", "Fun with Magnets", "Water", "Air Around Us", "Garbage In, Garbage Out"],
+                "Social Science": ["What, Where, How & When?", "On The Trial of Earliest People", "From Gathering to Growing Food", "In the Earliest Cities", "What Books & Burials Tell Us", "Kingdoms, Kings & Early Republic", "New Questions & Ideas", "Ashoka, The Emperor Who Gave Up War", "Vital Villages, Thriving Towns", "Traders, Kings & Pilgrims", "New Empires & Kingdoms", "Buildings, Paintings & Books", "The Earth in Solar System", "Globe: Latitudes & Longitudes", "Motions of Earth", "Maps", "Major Domains of Earth", "Major Landforms of Earth", "Our Country India", "India: Climate, Vegetation & Wildlife"],
+                "English": ["Who Did Patrick's Homework?", "How the Dog Found Himself", "Taro's Reward", "An Indian-American Woman", "A Different Kind of School", "Who I Am", "Fair Play", "A Game of Chance", "Desert Animals", "The Banyan Tree"]
+            },
+            "7th": {
+                "Mathematics": ["Integers", "Fractions & Decimals", "Data Handling", "Simple Equations", "Lines & Angles", "Triangle & Its Properties", "Congruence of Triangles", "Comparing Quantities", "Rational Numbers", "Practical Geometry", "Perimeter & Area", "Algebraic Expressions", "Exponents & Powers", "Symmetry", "Visualising Solid Shapes"],
+                "Science": ["Nutrition in Plants", "Nutrition in Animals", "Fibre to Fabric", "Heat", "Acids, Bases & Salts", "Physical & Chemical Changes", "Weather, Climate & Adaptations", "Winds, Storms & Cyclones", "Soil", "Respiration in Organisms", "Transportation in Animals & Plants", "Reproduction in Plants", "Motion & Time", "Electric Current & Effects", "Light", "Water: A Precious Resource", "Forests: Our Lifeline", "Wastewater Story"],
+                "Social Science": ["Tracing Changes", "New Kings & Kingdoms", "The Delhi Sultans", "The Mughal Empire", "Rulers & Buildings", "Towns, Traders & Craftspersons", "Tribes, Nomads & Settled Communities", "Devotional Paths", "The Making of Regional Cultures", "Eighteenth-Century Political Formations", "Environment", "Inside Our Earth", "Our Changing Earth", "Air", "Water", "Natural Vegetation", "Human Environment", "Life in Deserts"],
+                "English": ["Three Questions", "A Gift of Chappals", "Gopal & the Hilsa Fish", "The Ashes that Made Trees", "Quality", "Expert Detectives", "The Invention of Vita-Wonk", "Fire: Friend & Foe", "A Bicycle in Good Repair", "The Story of Cricket"]
+            },
+            "8th": {
+                "Mathematics": ["Rational Numbers", "Linear Equations", "Understanding Quadrilaterals", "Practical Geometry", "Data Handling", "Squares & Square Roots", "Cubes & Cube Roots", "Comparing Quantities", "Algebraic Expressions", "Visualising Solid Shapes", "Mensuration", "Exponents & Powers", "Direct & Inverse Proportions", "Factorisation", "Introduction to Graphs", "Playing with Numbers"],
+                "Science": ["Crop Production", "Microorganisms", "Synthetic Fibres", "Materials: Metals & Non-Metals", "Coal & Petroleum", "Combustion & Flame", "Conservation of Plants", "Cell Structure & Functions", "Reproduction in Animals", "Reaching Age of Adolescence", "Force & Pressure", "Friction", "Sound", "Chemical Effects of Current", "Some Natural Phenomena", "Light", "Stars & Solar System", "Pollution of Air & Water"],
+                "Social Science": ["How, When & Where", "From Trade to Territory", "Ruling the Countryside", "Tribals, Dikus & Vision", "When People Rebel", "Colonialism & City", "Weavers, Iron Smelters", "Civilising the Native", "Women, Caste & Reform", "The Changing World", "India After Independence", "Resources", "Land, Soil, Water", "Natural Vegetation", "Mineral & Power Resources", "Agriculture", "Industries", "Human Resources"],
+                "English": ["The Best Christmas Present", "The Tsunami", "Glimpses of the Past", "Bepin Choudhury's Lapse", "The Summit Within", "This is Jody's Fawn", "A Visit to Cambridge", "A Short Monsoon Diary", "The Great Stone Face"]
+            },
+            "9th": {
+                "Mathematics": ["Number Systems", "Polynomials", "Coordinate Geometry", "Linear Equations", "Introduction to Euclid", "Lines & Angles", "Triangles", "Quadrilaterals", "Areas of Parallelograms", "Circles", "Constructions", "Heron's Formula", "Surface Areas", "Statistics", "Probability"],
+                "Science": ["Matter in Surroundings", "Is Matter Around Us Pure?", "Atoms & Molecules", "Structure of Atom", "Fundamental Unit of Life", "Tissues", "Diversity in Living Organisms", "Motion", "Force & Laws of Motion", "Gravitation", "Work & Energy", "Sound", "Why Do We Fall Ill?", "Natural Resources", "Improvement in Food Resources"],
+                "Social Science": ["French Revolution", "Socialism in Europe", "Nazism & Rise of Hitler", "Forest Society", "Pastoralists in Modern", "Peasants & Farmers", "History & Sport", "Clothing: A Social History", "India Size & Location", "Physical Features of India", "Drainage", "Climate", "Natural Vegetation", "Population", "What is Democracy?", "Constitutional Design", "Electoral Politics", "Working of Institutions", "Democratic Rights"],
+                "English": ["The Fun They Had", "The Sound of Music", "The Little Girl", "A Truly Beautiful Mind", "The Snake & the Mirror", "My Childhood", "Packing", "Reach for the Top", "The Bond of Love", "Kathmandu", "If I Were You"]
+            },
+            "10th": {
+                "Mathematics": ["Real Numbers", "Polynomials", "Pair of Linear Equations", "Quadratic Equations", "Arithmetic Progressions", "Triangles", "Coordinate Geometry", "Introduction to Trigonometry", "Applications of Trigonometry", "Circles", "Constructions", "Areas Related to Circles", "Surface Areas", "Statistics", "Probability"],
+                "Science": ["Chemical Reactions", "Acids, Bases & Salts", "Metals & Non-Metals", "Carbon & Compounds", "Life Processes", "Control & Coordination", "How Do Organisms Reproduce?", "Heredity & Evolution", "Light: Reflection", "Human Eye & Colorful World", "Electricity", "Magnetic Effects", "Sources of Energy", "Our Environment", "Management of Resources"],
+                "Social Science": ["Rise of Nationalism", "Nationalism in India", "Making of Global World", "Age of Industrialization", "Print Culture", "Novels, Society & History", "Resources & Development", "Forest & Wildlife", "Water Resources", "Agriculture", "Minerals & Energy", "Manufacturing Industries", "Lifelines of Economy", "Power Sharing", "Federalism", "Democracy & Diversity", "Gender, Religion & Caste", "Popular Struggles", "Political Parties", "Outcomes of Democracy"],
+                "English": ["A Letter to God", "Nelson Mandela", "Two Stories About Flying", "From the Diary of Anne", "The Hundred Dresses", "The Proposal", "The Sermon at Benares", "The Necklace", "The Hack Driver", "Bholi", "The Book that Saved Earth"]
+            },
+            "Engineering": {
+        "Computer Science": [
+            "Programming in C", "Data Structures & Algorithms", "Operating Systems", 
+            "DBMS", "Computer Networks", "Artificial Intelligence", "Machine Learning", 
+            "Cloud Computing", "Cyber Security", "Web Technologies"
+        ],
+        "Electronics & Comm": [
+            "Digital Electronics", "Signals & Systems", "Microprocessors", 
+            "Control Systems", "VLSI Design", "Embedded Systems", "IoT Systems", 
+            "Wireless Communication"
+        ],
+        "Electrical": [
+            "Circuit Theory", "Electrical Machines", "Power Systems", 
+            "Power Electronics", "Control Systems", "Renewable Energy", 
+            "Smart Grids"
+        ],
+        "Mechanical": [
+            "Thermodynamics", "Fluid Mechanics", "Heat Transfer", 
+            "Theory of Machines", "Machine Design", "Robotics", 
+            "Automobile Engineering"
+        ],
+        "Civil": [
+            "Structural Analysis", "Geotechnical Eng", "Transportation Eng", 
+            "Environmental Eng", "Concrete Technology", "Surveying"
+        ]
+    },
+    "Professional Skills": {
+        "Programming Stack": ["Python", "Java", "React JS", "Node JS", "Git & GitHub"],
+        "Data Science": ["Power BI", "SQL", "Tableau", "Python for Data"],
+        "Design & Creative": ["Figma UI/UX", "Adobe Photoshop", "Video Editing", "Copywriting"],
+        "Business": ["Digital Marketing", "Entrepreneurship", "Financial Literacy"]
+    }
+        };
+     
+// Note: To save space, I listed subjects as strings in the arrays above. 
+// If you want the full breakdown (e.g., Class 6 -> Math -> [Topics]), 
+// the logic below handles both Arrays of strings (Leaf nodes) and Objects (Categories).
+
+        // ================= STATE MANAGEMENT =================
+        const store = {
+            user: null,
+            view: 'loading',
+            current: { subject: null, chapter: null, topic: null },
+            ui: { loading: false, sidebarOpen: false, testType: 'standard', timer: 0, testActive: false },
+            users: [],
+            testQuestions: [],
+            userAnswers: [],
+            testStartTime: null,
+            learningData: [],
+            dailyStreak: 0,
+            currentQuestionIndex: 0,
+            quizAnswers: [],
+            currentSandboxChallenge: null,
+            currentChatPeer: null
+        };
+
+        // ================= HELPER FUNCTIONS =================
+        const $ = (s) => document.querySelector(s);
+        const ensureUserLoaded = () => new Promise((resolve, reject) => {
+            if (store.user) resolve(store.user);
+            else {
+                let attempts = 0;
+                const checkUser = setInterval(() => {
+                    attempts++;
+                    if (store.user) {
+                        clearInterval(checkUser);
+                        resolve(store.user);
+                    } else if (attempts >= 50) {
+                        clearInterval(checkUser);
+                        reject(new Error('User not loaded after timeout'));
+                    }
+                }, 100);
+            }
+        });
+
+        // ================= AUTHENTICATION =================
+        const initAuth = () => {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        if (userDoc.exists) {
+                            store.user = {
+                                uid: user.uid,
+                                ...userDoc.data(),
+                                photoURL: user.photoURL || userDoc.data().photoURL || null
+                            };
+                            checkStreak();
+                            await updateUserActivity();
+                            store.view = store.user.standard ? 'dashboard' : 'onboard';
+                        } else {
+                            const newUserData = {
+                                name: user.displayName || 'Student',
+                                email: user.email,
+                                uid: user.uid,
+                                xp: 50,
+                                badges: ['newbie'],
+                                standard: null,
+                                streak: 1,
+                                lastLogin: new Date().toISOString(),
+                                totalStudyTime: 0,
+                                completedTopics: [],
+                                testScores: [],
+                                xpHistory: [],
+                                createdAt: new Date().toISOString(),
+                                photoURL: user.photoURL || null
+                            };
+                            await db.collection('users').doc(user.uid).set(newUserData);
+                            store.user = newUserData;
+                            awardBadge('newbie');
+                            store.view = 'onboard';
+                        }
+                    } catch (error) {
+                        console.error('Auth error:', error);
+                        Swal.fire('Error', 'Authentication failed. Please try again.', 'error');
+                        store.user = null;
+                        store.view = 'auth';
+                    }
+                } else {
+                    store.user = null;
+                    store.view = 'auth';
+                }
+                render();
+            });
+        };
+
+        const signup = async (email, password, name) => {
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                const userData = {
+                    name: name,
+                    email: email,
+                    uid: userCredential.user.uid,
+                    xp: 50,
+                    badges: ['newbie'],
+                    standard: null,
+                    streak: 1,
+                    lastLogin: new Date().toISOString(),
+                    totalStudyTime: 0,
+                    completedTopics: [],
+                    testScores: [],
+                    xpHistory: [],
+                    createdAt: new Date().toISOString(),
+                    photoURL: null
+                };
+                await db.collection('users').doc(userCredential.user.uid).set(userData);
+                store.user = userData;
+                awardBadge('newbie');
+                store.view = 'onboard';
+                render();
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        const login = async (email, password) => {
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        const loginWithGoogle = async () => {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        const resetPassword = async (email) => {
+            try {
+                await auth.sendPasswordResetEmail(email);
+                Swal.fire('Success', 'Password reset email sent!', 'success');
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        const logout = async () => {
+            try {
+                await auth.signOut();
+                store.user = null;
+                store.view = 'auth';
+                render();
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        // ================= USER MANAGEMENT =================
+        const updateUserActivity = async () => {
+            if (!store.user || !store.user.uid) return;
+            try {
+                const today = new Date().toDateString();
+                const lastLogin = store.user.lastLogin ? new Date(store.user.lastLogin).toDateString() : null;
+
+                if (!lastLogin || today !== lastLogin) {
+                    const yesterday = new Date(Date.now() - 86400000).toDateString();
+                    store.user.streak = lastLogin === yesterday ? (store.user.streak || 0) + 1 : 1;
+
+                    if (store.user.streak === 3) await awardBadge('streak_3');
+                    if (store.user.streak === 7) await awardBadge('streak_7');
+                    if (store.user.streak === 30) await awardBadge('streak_30');
+                }
+
+                store.user.lastLogin = new Date().toISOString();
+                await db.collection('users').doc(store.user.uid).update({
+                    streak: store.user.streak || 1,
+                    lastLogin: store.user.lastLogin
+                });
+            } catch (error) {
+                console.error('Error updating user activity:', error);
+            }
+        };
+
+        const checkStreak = () => {
+            if (!store.user || !store.user.lastLogin) {
+                store.dailyStreak = 0;
+                return;
+            }
+            const lastLogin = new Date(store.user.lastLogin);
+            const today = new Date();
+            const diffDays = Math.floor((today - lastLogin) / (1000 * 60 * 60 * 24));
+            if (diffDays > 1) {
+                store.user.streak = 1;
+            }
+            store.dailyStreak = store.user.streak || 1;
+        };
+
+        const addXP = async (amount, reason) => {
+            if (!store.user || !store.user.uid) return;
+            try {
+                store.user.xp = (store.user.xp || 0) + amount;
+                store.user.xpHistory = store.user.xpHistory || [];
+
+                // Push new history entry
+                store.user.xpHistory.push({
+                    amount: amount,
+                    reason: reason,
+                    date: new Date().toISOString() // Vital for the graph
+                });
+
+                // Keep history manageable (last 100 entries)
+                if (store.user.xpHistory.length > 100) {
+                    store.user.xpHistory = store.user.xpHistory.slice(-100);
+                }
+
+                // Update Firestore
+                await db.collection('users').doc(store.user.uid).update({
+                    xp: store.user.xp,
+                    xpHistory: store.user.xpHistory
+                });
+
+                // REFRESH GRAPH INSTANTLY IF ON DASHBOARD
+                if (store.view === 'dashboard') {
+                    initDashboardChart();
+                }
+
+            } catch (error) {
+                console.error('Error adding XP:', error);
+            }
+        };
+        // ================= HELPER: PARSE AI TEXT =================
+        const parseAIText = (text) => {
+            if (!text) return '';
+            return text
+                // 1. Convert **Bold** to HTML strong
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>')
+
+                // 2. Convert $Math$ to styled text
+                .replace(/\$(.*?)\$/g, '<span class="font-mono text-yellow-400 bg-gray-800 px-1 rounded mx-1">$1</span>')
+
+                // 3. Convert *Italic* .replace(/\*(.*?)\*/g, '<em>$1</em>')
+
+                // 4. Convert Line Breaks
+                .replace(/\n/g, '<br>');
+        };
+        const awardBadge = async (badgeId) => {
+            if (!store.user || !store.user.uid) return;
+            if (!BADGES[badgeId]) return;
+
+            store.user.badges = store.user.badges || [];
+            if (store.user.badges.includes(badgeId)) return;
+
+            store.user.badges.push(badgeId);
+            const badge = BADGES[badgeId];
+
+            try {
+                await addXP(badge.xp, `Badge: ${badge.name}`);
+                await db.collection('users').doc(store.user.uid).update({
+                    badges: firebase.firestore.FieldValue.arrayUnion(badgeId)
+                });
+
+                confetti({ particleCount: 100, spread: 70 });
+                Swal.fire({
+                    title: '🏆 Badge Unlocked!',
+                    html: `<div class="text-center">
+                        <div class="text-6xl mb-4">${badge.icon}</div>
+                        <h3 class="text-2xl font-bold">${badge.name}</h3>
+                        <p class="text-gray-300 mt-2">${badge.desc}</p>
+                        <div class="mt-4 text-yellow-400 font-bold">+${badge.xp} XP</div>
+                    </div>`,
+                    icon: 'success',
+                    background: '#1e293b',
+                    color: '#fff'
+                });
+            } catch (error) {
+                console.error('Error awarding badge:', error);
+            }
+        };
+
+        const setStandard = async (std) => {
+            try {
+                await ensureUserLoaded();
+                if (!store.user) throw new Error('User not found');
+                store.user.standard = std;
+                await db.collection('users').doc(store.user.uid).update({ standard: std });
+                store.view = 'dashboard';
+                render();
+            } catch (error) {
+                console.error('Error setting standard:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please try logging in again',
+                    icon: 'error',
+                    background: '#1e293b',
+                    color: '#fff'
+                });
+                logout();
+            }
+        };
+
+        const updateProfile = async (name, standard, photoURL) => {
+            if (!store.user) return;
+            try {
+                store.user.name = name || store.user.name;
+                store.user.standard = standard || store.user.standard;
+                store.user.photoURL = photoURL || store.user.photoURL;
+
+                await db.collection('users').doc(store.user.uid).update({
+                    name: store.user.name,
+                    standard: store.user.standard,
+                    photoURL: store.user.photoURL
+                });
+
+                Swal.fire('Success', 'Profile updated successfully!', 'success');
+                render();
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        const deleteAccount = async () => {
+            const result = await Swal.fire({
+                title: 'Delete Account?',
+                text: 'This action cannot be undone!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                background: '#1e293b',
+                color: '#fff'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await db.collection('users').doc(store.user.uid).delete();
+                    await store.user.delete();
+                    logout();
+                    Swal.fire('Deleted!', 'Your account has been deleted.', 'success');
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        };
+
+        // ================= AI INTEGRATION =================
+        const cleanGeminiResponse = (text) => {
+            let clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+            const startArr = clean.indexOf('[');
+            const endArr = clean.lastIndexOf(']');
+            if (startArr !== -1 && endArr !== -1) {
+                return clean.substring(startArr, endArr + 1);
+            }
+
+            const startObj = clean.indexOf('{');
+            const endObj = clean.lastIndexOf('}');
+            if (startObj !== -1 && endObj !== -1) {
+                return clean.substring(startObj, endObj + 1);
+            }
+
+            return clean;
+        };
+
+        const getGeminiContent = async (type, topic, subject, standard) => {
+            if (CONFIG.geminiKey) {
+                try {
+                    let prompt = '';
+
+                    // 1. NOTES (Text Mode)
+                    if (type === 'notes') {
+                        prompt = `Act as an expert teacher for Grade ${standard}. Generate detailed study notes for "${topic}" (${subject}). 
+                        Output strictly HTML body content (no <html> or markdown tags). 
+                        Use <h3 class="text-xl font-bold text-indigo-300 mb-2">, <ul class="list-disc pl-5 space-y-2 mb-4">, <li>, <strong class="text-white">.`;
+                    }
+                    // 2. QUIZ (JSON Mode)
+                    else if (type === 'quiz') {
+                        prompt = `Create 5 multiple-choice questions for Grade ${standard} on "${topic}" (${subject}). 
+                        Return ONLY a raw JSON array. No markdown. 
+                        Format: [{"q": "Question", "options": ["A","B","C","D"], "ans": 0, "explanation": "Reason"}]`;
+                    }
+                    // 3. SANDBOX GENERATION (Text Mode - FIX FOR YOUR ERROR)
+                    else if (type === 'sandbox_gen') {
+                        // We pass the full prompt directly in the 'topic' argument for this type
+                        prompt = topic;
+                    }
+                    // 4. SANDBOX CHECK (JSON Mode)
+                    else if (type === 'sandbox_check') {
+                        prompt = topic;
+                    }
+                    // 5. TEST GENERATION (JSON Mode)
+                    else if (type.startsWith('test_')) {
+                        prompt = `Create 10 multiple-choice questions for Grade ${standard} on: ${topic}. 
+                        Return ONLY a raw JSON array. No markdown. 
+                        Format: [{"q": "Question", "options": ["A","B","C","D"], "ans": 0, "explanation": "Reason"}]`;
+                    }
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.geminiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+
+                    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        let text = data.candidates[0].content.parts[0].text;
+
+                        // === CRITICAL FIX ===
+                        // If we want Text (Notes or Scenario), return text immediately.
+                        // Do NOT attempt JSON.parse here.
+                        if (type === 'notes' || type === 'sandbox_gen') {
+                            return text.replace(/```html/g, '').replace(/```/g, '').trim();
+                        }
+
+                        // If we want JSON (Quiz, Check, Test), clean and parse.
+                        const jsonStr = cleanGeminiResponse(text);
+                        // Test parse to catch errors early
+                        try {
+                            JSON.parse(jsonStr);
+                            return jsonStr;
+                        } catch (e) {
+                            console.warn("JSON Parse Failed:", text);
+                            // Fallback to avoid crash
+                            return "[]";
+                        }
+                    } else throw new Error('Invalid Gemini Response');
+                } catch (error) {
+                    console.error('Gemini Error:', error);
+                    return getFallbackContent(type, topic, subject, standard);
+                }
+            }
+            return getFallbackContent(type, topic, subject, standard);
+        };
+        const getFallbackContent = (type, topic, subject, standard) => {
+            if (type === 'notes') {
+                return `<div class="p-4 glass rounded-xl">
+                    <h3 class="text-xl font-bold mb-4 text-indigo-300">${topic} - ${subject}</h3>
+                    <p class="text-gray-300 mb-4">This topic covers essential concepts in ${subject} for grade ${standard}.</p>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <strong class="text-white">Key Concept:</strong> Understanding the fundamentals of ${topic}.
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <strong class="text-white">Important Points:</strong>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>Master the basic definitions</li>
+                                <li>Practice with examples</li>
+                                <li>Apply concepts to real-world scenarios</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            return JSON.stringify([
+                {
+                    q: "Sample Question (Please check API configuration)",
+                    options: ["Option A", "Option B", "Option C", "Option D"],
+                    ans: 0,
+                    explanation: "Check your API key configuration in the CONFIG object."
+                }
+            ]);
+        };
+
+        // ================= YOUTUBE VIDEO FETCHING (OPTIMIZED) =================
+        // ================= UPDATED YOUTUBE FETCHER =================
+        const getYouTubeVideos = async (topic, duration = 'default') => {
+            if (!CONFIG.youtubeKey) return [];
+
+            try {
+                // LOGIC:
+                // 1. 'default' (Initial Load) -> Targets 30-60 min range using 'long' param + 'full lecture' keywords.
+                // 2. 'any', 'short', 'medium' -> Standard filters for the "Find Alternative" modal.
+                
+                let videoDuration = 'any';
+                let queryAddon = ''; 
+
+                if (duration === 'default') {
+                    // This targets the "Ideal 30-60 min" range
+                    videoDuration = 'long'; // YouTube API 'long' is > 20 mins
+                    queryAddon = ' full lecture detailed class'; 
+                }
+                else if (duration === 'short') { videoDuration = 'short'; }
+                else if (duration === 'medium') { videoDuration = 'medium'; }
+                else if (duration === 'long') { videoDuration = 'long'; }
+                else if (duration === '1h') { videoDuration = 'long'; queryAddon = ' 1 hour'; }
+                else if (duration === '2h') { videoDuration = 'long'; queryAddon = ' full course'; }
+                else { videoDuration = 'any'; } // Fallback for specific 'any' selection
+
+                const query = encodeURIComponent(`${topic} educational${queryAddon} -shorts`);
+
+                const response = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoDuration=${videoDuration}&maxResults=10&key=${CONFIG.youtubeKey}`
+                );
+
+                if (!response.ok) return []; // Silent fail check
+
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    return data.items.map(item => ({
+                        id: item.id.videoId,
+                        title: item.snippet.title,
+                        thumb: item.snippet.thumbnails.medium.url,
+                        channel: item.snippet.channelTitle
+                    }));
+                }
+                return [];
+            } catch (error) {
+                console.error("YouTube API Error:", error);
+                return []; // Return empty array so UI doesn't break
+            }
+        };
+        // ================= TEST SYSTEM =================
+       const startTest = async (type, customTopics = []) => {
+            store.ui.testActive = true;
+            store.ui.testType = type;
+            store.testQuestions = [];
+            store.userAnswers = [];
+            store.currentQuestionIndex = 0;
+            store.ui.loading = true;
+            store.view = 'testLoading';
+            render();
+
+            // Start Music
+            const audio = document.getElementById('test-music');
+            if(audio) { audio.volume = 0.3; audio.play().catch(e => console.log("Audio play blocked", e)); }
+
+            try {
+                let rawContent = "";
+
+                if (type === 'standard') {
+                    rawContent = await getGeminiContent('test_standard', 'All Subjects', 'General', store.user.standard);
+                }
+                else if (type === 'custom' && customTopics.length > 0) {
+                    const topicsStr = customTopics.map(t => t.split(':')[1]).join(', ');
+                    rawContent = await getGeminiContent('test_custom', topicsStr, 'Selected', store.user.standard);
+                }
+
+                try {
+                    const parsed = JSON.parse(rawContent);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        store.testQuestions = parsed;
+                    } else {
+                        throw new Error("Empty Array");
+                    }
+                } catch (e) {
+                    console.warn("Parsing failed, using fallback");
+                    store.testQuestions = generateFallbackQuestions(10, type);
+                }
+
+                if (store.testQuestions.length > 0) {
+                    store.ui.timer = store.testQuestions.length * 120;
+                    store.testStartTime = Date.now();
+                    store.view = 'test';
+                    render();
+                    startTimer();
+                } else {
+                    throw new Error("No questions");
+                }
+            } catch (error) {
+                console.error('Test Start Error:', error);
+                Swal.fire('Error', 'Could not generate test. Try again.', 'error');
+                store.view = 'testSeries';
+                render();
+            }
+        };
+
+        const generateFallbackQuestions = (count, context) => {
+            const questions = [];
+            for (let i = 0; i < count; i++) {
+                questions.push({
+                    q: `What is an important consideration when studying ${context}?`,
+                    options: ['Understanding fundamental principles', 'Memorizing key formulas', 'Applying concepts to real problems', 'All of the above'],
+                    ans: 3,
+                    explanation: `All options are important for comprehensive understanding. Fundamental principles provide the foundation, key formulas are essential tools, and real-world applications demonstrate practical relevance.`,
+                    subject: 'General',
+                    topic: context
+                });
+            }
+            return questions;
+        };
+
+        const startTimer = () => {
+            store.timerInterval = setInterval(() => {
+                if (store.ui.timer > 0) {
+                    store.ui.timer--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(store.timerInterval);
+                    submitTest();
+                }
+            }, 1000);
+        };
+
+        const updateTimerDisplay = () => {
+            const timerEl = document.getElementById('test-timer');
+            if (timerEl) {
+                const minutes = Math.floor(store.ui.timer / 60);
+                const seconds = store.ui.timer % 60;
+                timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                if (store.ui.timer < 60) {
+                    timerEl.classList.add('text-red-500', 'pulse');
+                }
+            }
+        };
+
+       const submitTest = async () => {
+            if (store.timerInterval) clearInterval(store.timerInterval);
+            store.ui.testActive = false;
+
+            // Stop Music
+            const audio = document.getElementById('test-music');
+            if(audio) { audio.pause(); audio.currentTime = 0; }
+
+            let score = 0;
+            const total = store.testQuestions.length;
+
+            store.testQuestions.forEach((q, idx) => {
+                if (store.userAnswers[idx] === q.ans) score++;
+            });
+
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            const timeTaken = Math.floor((Date.now() - store.testStartTime) / 1000);
+            const baseXP = score * 10;
+            const timeBonus = Math.max(0, 300 - timeTaken) / 10;
+            const accuracyBonus = percentage >= 90 ? 100 : percentage >= 70 ? 50 : 0;
+            const totalXP = baseXP + timeBonus + accuracyBonus;
+
+            await addXP(totalXP, `Test completed: ${percentage}%`);
+
+            if (percentage === 100) await awardBadge('quiz_master');
+            if (percentage >= 90) await awardBadge('accuracy_90');
+            if (timeTaken < 60) await awardBadge('speedster');
+
+            const testResult = {
+                score,
+                total,
+                percentage,
+                timeTaken,
+                xpEarned: totalXP,
+                date: new Date().toISOString(),
+                type: store.ui.testType
+            };
+
+            store.user.testScores = store.user.testScores || [];
+            store.user.testScores.push(testResult);
+
+            try {
+                await db.collection('users').doc(store.user.uid).update({
+                    testScores: store.user.testScores
+                });
+            } catch (error) {
+                console.error('Error saving test result:', error);
+            }
+
+            store.view = 'testReport';
+            render();
+        };
+
+        // ================= RENDERING =================
+        const render = () => {
+            const app = $('#app');
+            if (!app) return;
+
+            if (store.view === 'loading') {
+                app.innerHTML = ViewLoading();
+                return;
+            }
+
+            if (store.view === 'auth' || store.view === 'onboard') {
+                app.innerHTML = getCurrentView();
+                return;
+            }
+
+            if (!store.user) {
+                store.view = 'auth';
+                app.innerHTML = ViewAuth();
+                return;
+            }
+
+            app.innerHTML = `<div class="flex">${CompNavbar()}${CompMain()}${CompMobileNav()}</div>`;
+
+            if (store.view === 'dashboard') setTimeout(() => initDashboardChart(), 100);
+            if (store.view === 'social' && store.user) setTimeout(() => initPeerList(), 100);
+            if (store.view === 'learning' && store.user) setTimeout(() => listenToClassChat(), 500);
+        };
+
+        // ================= COMPONENTS =================
+        const ViewLoading = () => `
+            <div class="min-h-screen flex flex-col items-center justify-center">
+                <div class="loader mb-8"></div>
+                <h2 class="text-2xl font-bold mb-2">Loading EdVibe</h2>
+                <p class="text-gray-400">Preparing your learning experience...</p>
+            </div>
+        `;
+
+        const CompNavbar = () => {
+            if (!store.user) return '';
+            const userName = store.user.name || 'Student';
+            const userPhoto = store.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=6366f1&color=fff`;
+            const userLevel = Math.floor((store.user.xp || 0) / 1000) + 1;
+
+            const NavItem = (id, icon, label) => `
+                <button onclick="store.view='${id}'; render()" 
+                    class="w-full text-left p-3 md:p-4 text-lg md:text-xl flex items-center gap-4 hover:bg-white/5 transition rounded-xl ${store.view === id ? 'text-indigo-400 bg-white/5' : 'text-gray-500'}">
+                    <div class="nav-icon-wrapper">
+                        <i class="${icon} w-6 text-center"></i>
+                        <div id="badge-${id}" class="nav-badge"></div>
+                    </div>
+                    <span class="font-semibold hidden md:inline">${label}</span>
+                </button>`;
+
+            return `
+                <aside class="fixed top-0 left-0 w-64 h-full glass border-r border-gray-700 hidden md:flex flex-col z-50 slide-in">
+                    <div class="p-6 text-3xl font-bold gradient-text tracking-tighter">EdVibe.</div>
+                    <nav class="flex-1 px-4 space-y-2 mt-4">
+                        ${NavItem('dashboard', 'fas fa-th-large', 'Dashboard')}
+                        ${NavItem('syllabus', 'fas fa-book-open', 'Syllabus')}
+                        ${NavItem('testSeries', 'fas fa-clipboard-list', 'Test Series')}
+                        ${NavItem('sandbox', 'fas fa-code', 'AI Sandbox')}
+                        ${NavItem('social', 'fas fa-users', 'Peer Connect')}
+                        ${NavItem('profile', 'fas fa-user-astronaut', 'Profile')}
+                    </nav>
+                    <div class="p-4">
+                        <div class="glass p-4 rounded-xl flex items-center gap-3">
+                            <img src="${userPhoto}" class="w-10 h-10 rounded-full border-2 border-indigo-500">
+                            <div class="overflow-hidden">
+                                <div class="font-bold text-sm truncate">${userName}</div>
+                                <div class="text-xs text-yellow-400 font-mono">Lv. ${userLevel}</div>
+                            </div>
+                        </div>
+                       <button onclick="logout()" class="w-full mt-3 text-xs text-gray-500 hover:text-red-400 flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </button>
+                        <div class="mt-4 pt-4 border-t border-gray-800 text-center">
+                            <p class="text-[10px] text-gray-600 font-mono uppercase tracking-wider">Developed by</p>
+                            <p class="text-[11px] text-indigo-400 font-bold mt-1">MWD Agra</p>
+                            <p class="text-[9px] text-gray-500">Mudit Vij & Ankit Sen</p>
+                        </div>
+                    </div>
+                </aside>
+            `;
+        };
+
+        const CompMain = () => `
+            <main class="md:ml-64 p-4 md:p-8 pb-16 md:pb-8 w-full fade-in">
+                ${getCurrentView()}
+            </main>
+        `;
+
+        const CompMobileNav = () => `
+            <div class="fixed bottom-0 w-full h-16 glass md:hidden flex justify-around items-center z-50 px-1 border-t border-gray-700 backdrop-blur-xl bg-[#0b0f19]/90">
+                <button onclick="store.view='dashboard'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'dashboard' ? 'text-indigo-400' : 'text-gray-500'}">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="text-[10px]">Home</span>
+                </button>
+                
+             <button onclick="store.view='syllabus'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'syllabus' ? 'text-indigo-400' : 'text-gray-500'}">
+                    <i class="fas fa-book text-xl"></i>
+                    <span class="text-[10px]">Learn</span>
+                </button>
+                
+                <button onclick="store.view='testSeries'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'testSeries' ? 'text-indigo-400' : 'text-gray-500'}">
+                    <i class="fas fa-clipboard-list text-xl"></i>
+                    <span class="text-[10px]">Tests</span>
+                </button>
+
+                <button onclick="store.view='sandbox'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'sandbox' ? 'text-indigo-400' : 'text-gray-500'}"><i class="fas fa-code text-xl"></i>
+                    <span class="text-[10px]">AI Lab</span>
+                </button>
+
+                <button onclick="store.view='social'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'social' ? 'text-indigo-400' : 'text-gray-500'}">
+                    <i class="fas fa-users text-xl"></i>
+                    <span class="text-[10px]">Peers</span>
+                </button>
+                
+                <button onclick="store.view='profile'; render()" class="p-2 flex flex-col items-center gap-1 ${store.view === 'profile' ? 'text-indigo-400' : 'text-gray-500'}">
+                    <i class="fas fa-user text-xl"></i>
+                    <span class="text-[10px]">Me</span>
+                </button>
+            </div>
+        `;
+
+        const getCurrentView = () => {
+            const views = {
+                'auth': ViewAuth,
+                'onboard': ViewOnboard,
+                'dashboard': ViewDashboard,
+                'syllabus': ViewSyllabus,
+                'learning': ViewLearning,
+                'test': ViewTest,
+                'testReport': ViewTestReport,
+                'profile': ViewProfile,
+                'social': ViewSocial,
+                'testSeries': ViewTestSeries,
+                'testLoading': ViewTestLoading,
+                'editProfile': ViewEditProfile,
+                'sandbox': ViewSandbox
+            };
+            return views[store.view] ? views[store.view]() : ViewLoading();
+        };
+
+        // ================= VIEWS =================
+      const ViewAuth = () => `
+            <div class="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0b0f19] bg-grid-pattern p-4 md:p-0">
+                <div class="absolute top-0 left-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+                <div class="w-full max-w-7xl min-h-screen md:min-h-[80vh] grid grid-cols-1 md:grid-cols-2 z-10">
+                    
+                    <div class="hidden md:flex flex-col justify-between relative p-12 lg:p-16">
+                        <div class="absolute top-20 left-10 text-6xl float-anim opacity-80"></div>
+                        <div class="absolute bottom-32 right-20 text-6xl float-anim float-anim-delay-1 opacity-80">🧠</div>
+                        <div class="absolute top-1/2 right-16 text-5xl float-anim float-anim-delay-2 opacity-60">⚛️</div>
+                        
+                        <div class="mt-10">
+                            <h1 class="text-5xl lg:text-7xl font-extrabold mb-6 leading-tight">
+                                Master Your <br>
+                                <span class="gradient-text">Future.</span>
+                            </h1>
+                            <p class="text-xl text-gray-400 mb-8 max-w-md leading-relaxed">
+                                Experience the next evolution of learning with AI-driven notes, quizzes, and real-world simulations.
+                            </p>
+                            
+                            <div class="flex items-center gap-4">
+                                <div class="glass px-6 py-3 rounded-full flex items-center gap-3 border border-white/5">
+                                    <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span class="font-bold text-sm">AI Powered</span>
+                                </div>
+                                <div class="glass px-6 py-3 rounded-full flex items-center gap-3 border border-white/5">
+                                    <span class="text-yellow-400 text-sm">★★★★★</span>
+                                    <span class="font-bold text-sm">Top Rated</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-8">
+                            <p class="text-[10px] text-gray-500 font-mono uppercase tracking-widest mb-2">Developed By</p>
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                                <div>
+                                    <p class="font-bold text-white text-lg tracking-tight">MWD Agra</p>
+                                    <p class="text-xs text-indigo-400 flex gap-1">
+                                        <a href="https://www.linkedin.com/in/mudit-vij" target="_blank" class="hover:text-white hover:underline transition">Mudit Vij</a> 
+                                        & 
+                                        <a href="https://www.linkedin.com/in/ankit-sen" target="_blank" class="hover:text-white hover:underline transition">Ankit Sen</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-center p-4">
+                        <div class="glass w-full max-w-md p-8 md:p-10 rounded-3xl shadow-2xl border border-white/10 relative overflow-hidden backdrop-blur-xl">
+                            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                            
+                            <div class="text-center mb-8">
+                                <h2 class="text-3xl font-bold mb-2">Welcome to EdVibe</h2>
+                                <p class="text-gray-400 text-sm">Sign in to continue your learning journey</p>
+                            </div>
+
+                            <div id="auth-tabs" class="flex p-1.5 bg-gray-900/50 rounded-xl mb-8 border border-white/5">
+                                <button onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg bg-indigo-600 text-white" id="tab-login">Login</button>
+                                <button onclick="switchAuthTab('signup')" class="flex-1 py-2.5 rounded-lg font-semibold text-sm text-gray-400 hover:text-white transition-all hover:bg-white/5" id="tab-signup">Sign Up</button>
+                            </div>
+
+                            <div id="auth-form" class="fade-in">${AuthForm('login')}</div>
+                            
+                            <p class="text-center text-[10px] text-gray-600 mt-8">
+                                By continuing, you agree to our Terms of Service & Privacy Policy.
+                            </p>
+                            
+                            <div class="md:hidden mt-6 pt-6 border-t border-gray-800 text-center">
+                                 <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Developed by</p>
+                                 <div class="text-xs">
+                                     <span class="text-indigo-400 font-bold">MWD Agra</span> 
+                                     <span class="text-gray-600">•</span>
+                                     <a href="#" class="text-gray-400 hover:text-white">Mudit Vij</a> & 
+                                     <a href="#" class="text-gray-400 hover:text-white">Ankit Sen</a>
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Update Tab Logic
+        window.switchAuthTab = (tab) => {
+            const loginBtn = document.getElementById('tab-login');
+            const signupBtn = document.getElementById('tab-signup');
+            
+            const activeClass = "flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-lg bg-indigo-600 text-white";
+            const inactiveClass = "flex-1 py-2.5 rounded-lg font-semibold text-sm text-gray-400 hover:text-white transition-all hover:bg-white/5";
+            
+            if(tab === 'login') {
+                loginBtn.className = activeClass;
+                signupBtn.className = inactiveClass;
+            } else {
+                signupBtn.className = activeClass;
+                loginBtn.className = inactiveClass;
+            }
+            document.getElementById('auth-form').innerHTML = AuthForm(tab);
+        };
+        const AuthForm = (type) => {
+            const isLogin = type === 'login';
+            return `
+                <div class="space-y-4">
+                    ${!isLogin ? `
+                        <input type="text" id="name" placeholder="Full Name" 
+                            class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                    ` : ''}
+                    <input type="email" id="email" placeholder="Email" 
+                        class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                    <input type="password" id="password" placeholder="Password" 
+                        class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                    ${isLogin ? `
+                        <div class="text-right">
+                            <button onclick="showForgotPassword()" class="text-sm text-indigo-400 hover:text-indigo-300">Forgot Password?</button>
+                        </div>
+                    ` : ''}
+                    <button onclick="${isLogin ? 'handleLogin()' : 'handleSignup()'}" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/30 transition">
+                        ${isLogin ? 'Sign In' : 'Create Account'}
+                    </button>
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-700"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-[#0b0f19] text-gray-500">Or continue with</span>
+                        </div>
+                    </div>
+                    <button onclick="loginWithGoogle()" 
+                        class="w-full bg-white text-gray-900 font-bold py-3.5 rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] transition">
+                        <i class="fab fa-google text-red-500 text-xl"></i> Google
+                    </button>
+                </div>
+            `;
+        };
+
+        const ViewOnboard = () => `
+            <div class="min-h-screen flex flex-col items-center justify-center p-4">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">Welcome to <span class="gradient-text">EdVibe</span>!</h2>
+                    <p class="text-gray-400">Select your learning path to begin</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl w-full px-4">
+                    ${Object.keys(SYLLABUS).map(std => `
+                        <div onclick="setStandard('${std}')" 
+                            class="glass p-8 rounded-2xl text-center hover:bg-indigo-600/20 hover:border-indigo-500 border border-transparent transition-all duration-300 cursor-pointer transform hover:scale-[1.02] group">
+                            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-6 text-3xl group-hover:scale-110 transition-transform">
+                                ${std === 'Skills' ? '💼' : '🎓'}
+                            </div>
+                            <h3 class="text-2xl font-bold mb-2">${std}</h3>
+                            <p class="text-gray-400 text-sm">${Object.keys(SYLLABUS[std]).length} Subjects</p>
+                            <div class="mt-4 text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition">
+                                Click to select →
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        const ViewDashboard = () => {
+            const level = Math.floor((store.user?.xp || 0) / 1000) + 1;
+            const progress = ((store.user?.xp || 0) % 1000) / 10;
+            return `
+                <div class="max-w-6xl mx-auto space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold">Welcome back, ${store.user?.name?.split(' ')[0] || 'Student'}! 👋</h2>
+                            <p class="text-gray-400">${store.user?.standard || 'Not Selected'} • Level ${level}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="glass px-4 py-2 rounded-xl text-center">
+                                <div class="text-2xl font-bold text-yellow-400"><i class="fas fa-fire mr-2"></i>${store.user?.streak || 0}</div>
+                                <div class="text-xs text-gray-500">Day Streak</div>
+                            </div>
+                            <div class="glass px-4 py-2 rounded-xl text-center">
+                                <div class="text-2xl font-bold text-indigo-400"><i class="fas fa-bolt mr-2"></i>${store.user?.xp || 0}</div>
+                                <div class="text-xs text-gray-500">Total XP</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        ${StatCard('XP Earned', store.user?.xp || 0, 'fas fa-bolt', 'text-yellow-400')}
+                        ${StatCard('Badges', store.user?.badges?.length || 0, 'fas fa-medal', 'text-pink-400')}
+                        ${StatCard('Tests Taken', store.user?.testScores?.length || 0, 'fas fa-clipboard-check', 'text-green-400')}
+                        ${StatCard('Study Hours', Math.floor((store.user?.totalStudyTime || 0) / 60), 'fas fa-clock', 'text-purple-400')}
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        
+                        <div class="glass p-6 rounded-2xl flex flex-col">
+                            <h3 class="text-xl font-bold mb-4">Learning Progress</h3>
+                            <div class="relative w-full flex-1 min-h-[250px]">
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="glass p-6 rounded-2xl flex flex-col">
+                            <h3 class="text-xl font-bold mb-4">Recent Achievements</h3>
+                            <div class="space-y-3 overflow-y-auto flex-1 max-h-[250px] pr-2">
+                                ${(store.user?.badges?.slice(-5).reverse() || []).map(badgeId => {
+                const badge = BADGES[badgeId];
+                if (!badge) return '';
+                return `
+                                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition">
+                                            <div class="text-2xl">${badge.icon}</div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold truncate">${badge.name}</div>
+                                                <div class="text-xs text-gray-400 truncate">${badge.desc}</div>
+                                            </div>
+                                            <div class="text-yellow-400 text-sm font-bold whitespace-nowrap">+${badge.xp} XP</div>
+                                        </div>
+                                    `;
+            }).join('')}
+                                ${(!store.user?.badges?.length) ? `
+                                    <div class="h-full flex flex-col items-center justify-center text-gray-500 italic">
+                                        <i class="fas fa-medal text-3xl mb-2 opacity-20"></i>
+                                        <p>No badges yet.</p>
+                                        <p class="text-xs">Complete lessons to earn them!</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass p-6 rounded-2xl">
+                        <h3 class="text-xl font-bold mb-4">Continue Learning</h3>
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="w-full md:w-1/3 aspect-video bg-gradient-to-br from-indigo-900 to-purple-900 rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="store.view='syllabus'; render()">
+                                <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition"></div>
+                                <div class="relative z-10 text-center">
+                                    <div class="text-5xl mb-4">📚</div>
+                                    <div class="font-bold text-lg">Resume Course</div>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold mb-2">Your Learning Path</h4>
+                                <div class="w-full bg-gray-800 h-3 rounded-full overflow-hidden mb-4">
+                                    <div class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full" 
+                                        style="width: ${((store.user?.completedTopics?.length || 0) * 5) > 100 ? 100 : (store.user?.completedTopics?.length || 0) * 5}%"></div>
+                                </div>
+                                <p class="text-gray-400 mb-4">${store.user?.completedTopics?.length || 0} topics completed</p>
+                                <button onclick="store.view='syllabus'; render()" 
+                                    class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition">
+                                    Browse Syllabus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const ViewSyllabus = () => {
+            const subjects = SYLLABUS[store.user?.standard] || {};
+            if (!store.user?.standard) return `
+                <div class="max-w-6xl mx-auto text-center py-12">
+                    <div class="text-6xl mb-6">📚</div>
+                    <h2 class="text-3xl font-bold mb-4">No Syllabus Selected</h2>
+                    <p class="text-gray-400 mb-8">Please select your standard from the dashboard first.</p>
+                    <button onclick="store.view='dashboard'; render()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition">
+                        Go to Dashboard
+                    </button>
+                </div>
+            `;
+
+            return `
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-3xl font-bold gradient-text">${store.user.standard} Syllabus</h2>
+                            <p class="text-gray-400">Complete topics to earn XP and badges</p>
+                        </div>
+                        <div class="glass px-4 py-2 rounded-lg">
+                            <span class="text-green-400">
+                                <i class="fas fa-check-circle mr-2"></i>${store.user.completedTopics?.length || 0} Completed
+                            </span>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        ${Object.entries(subjects).map(([subject, topics]) => `
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <div class="bg-gradient-to-r from-indigo-600/30 to-purple-600/30 p-6">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-2xl font-bold">${subject}</h3>
+                                        <span class="glass px-3 py-1 rounded-full text-sm">${topics.length} Topics</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                    ${topics.map(topic => {
+                const isCompleted = store.user.completedTopics?.includes(`${subject}:${topic}`);
+                return `
+                                            <div onclick="startLesson('${subject}','${topic}')" 
+                                                class="p-4 rounded-xl hover:bg-white/5 cursor-pointer border ${isCompleted ? 'border-green-500/30 bg-green-500/10' : 'border-gray-700'} transition group">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-semibold ${isCompleted ? 'text-green-300' : 'text-gray-300'}">${topic}</span>
+                                                    ${isCompleted ? '<span class="text-green-400"><i class="fas fa-check-circle"></i></span>' : '<i class="fas fa-chevron-right text-gray-600 group-hover:text-indigo-400 transition"></i>'}
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span class="text-gray-500">Click to learn</span>
+                                                    <span class="text-yellow-400">+50 XP</span>
+                                                </div>
+                                            </div>
+                                        `;
+            }).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+        // ================= VIDEO CHANGER LOGIC =================
+
+        // 1. Open the Modal
+        window.openChangeVideoModal = () => {
+            Swal.fire({
+                title: '<strong>Change Video</strong>',
+                html: `
+                    <div class="text-left">
+                        <label class="text-xs text-gray-400 uppercase font-bold mb-2 block">Select Duration</label>
+                        <select id="video-duration-filter" onchange="searchAlternativeVideos()" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white mb-4 focus:border-indigo-500 outline-none">
+                            <option value="any">Any Duration</option>
+                            <option value="short">Short (< 4 mins)</option>
+                            <option value="medium">Medium (4 - 20 mins)</option>
+                            <option value="long">Long (> 20 mins)</option>
+                            <option value="1h">~1 Hour Lecture</option>
+                            <option value="2h">2+ Hours Course</option>
+                        </select>
+                        
+                        <label class="text-xs text-gray-400 uppercase font-bold mb-2 block">Search Results</label>
+                        <div id="video-results-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                            <div class="text-center text-gray-500 py-4 text-sm">Select a filter to search</div>
+                        </div>
+                    </div>
+                `,
+                background: '#1e293b',
+                color: '#fff',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '600px',
+                didOpen: () => {
+                    // Auto-search with default 'any' when opened
+                    searchAlternativeVideos();
+                }
+            });
+        };
+
+        // 2. Search & Render List
+        window.searchAlternativeVideos = async () => {
+            const duration = document.getElementById('video-duration-filter').value;
+            const container = document.getElementById('video-results-list');
+
+            container.innerHTML = '<div class="text-center py-4"><div class="loader w-6 h-6 border-2 inline-block"></div></div>';
+
+            const videos = await getYouTubeVideos(`${store.current.topic} ${store.current.subject}`, duration);
+
+            if (videos.length === 0) {
+                container.innerHTML = '<div class="text-center text-red-400 text-sm py-2">No videos found. Try a different filter.</div>';
+                return;
+            }
+
+            container.innerHTML = videos.map(v => `
+                <div onclick="swapVideo('${v.id}')" class="flex gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer group transition border border-transparent hover:border-gray-600">
+                    <div class="relative w-32 h-20 flex-shrink-0 overflow-hidden rounded-md">
+                        <img src="${v.thumb}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
+                            <i class="fas fa-play text-white opacity-0 group-hover:opacity-100 drop-shadow-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <h4 class="text-sm font-bold text-gray-200 line-clamp-2 leading-tight group-hover:text-indigo-400 transition">${v.title}</h4>
+                        <p class="text-xs text-gray-500 mt-1 truncate">${v.channel}</p>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // 3. Swap the Main Player
+        window.swapVideo = (videoId) => {
+            const container = document.getElementById('video-container');
+            if (container) {
+                container.innerHTML = `
+                    <iframe 
+                        src="https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&controls=1&color=white&autoplay=1" 
+                        class="w-full h-full absolute inset-0"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                    ></iframe>
+                `;
+            }
+            Swal.close(); // Close modal
+
+            // Optional: Notify user
+            const Toast = Swal.mixin({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#1e293b', color: '#fff'
+            });
+            Toast.fire({ icon: 'success', title: 'Video updated' });
+        };
+        // ================= FIXED LEARNING VIEW =================
+        const ViewLearning = () => {
+            if (!store.current.topic) {
+                store.view = 'syllabus';
+                render();
+                return '';
+            }
+
+            return `
+                <div class="flex flex-col h-full bg-[#0b0f19]">
+                    <div class="p-3 md:p-4 border-b border-gray-700 flex items-center justify-between bg-[#0b0f19] z-10 shrink-0">
+                        <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
+                            <button onclick="store.view='syllabus'; render()" class="p-2 glass rounded-xl hover:bg-white/5 transition text-gray-400 hover:text-white">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div class="truncate">
+                                <h2 class="text-base md:text-xl font-bold truncate text-white leading-tight">${store.current.topic}</h2>
+                                <div class="text-xs text-indigo-400 truncate">${store.current.subject}</div>
+                            </div>
+                        </div>
+                        <button onclick="markAsCompleted()" class="whitespace-nowrap bg-green-600/10 text-green-400 border border-green-600/20 px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-bold text-xs md:text-sm hover:bg-green-600/20 transition">
+                            <i class="fas fa-check-circle mr-1 md:mr-2"></i> <span class="hidden md:inline">Mark</span> Done
+                        </button>
+                    </div>
+
+                    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+                        
+                        <div class="flex-1 flex flex-col overflow-y-auto pb-20 md:pb-0 relative custom-scrollbar">
+                            
+                            <div class="w-full p-4 md:p-6 pb-0">
+                                <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-black group border border-gray-800 ring-1 ring-white/5">
+                                    
+                                    <div class="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                                    
+                                    <div class="relative z-10 bg-black rounded-xl overflow-hidden">
+                                        <div id="video-container" class="w-full aspect-video bg-[#050505] flex items-center justify-center relative">
+                                            <div class="flex flex-col items-center gap-3">
+                                                <div class="loader"></div>
+                                                <span class="text-xs text-gray-500 uppercase tracking-widest">Loading Player...</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="absolute top-0 w-full p-4 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-b from-black/80 to-transparent">
+                                            <div class="flex items-center gap-2">
+                                                <div class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg uppercase tracking-wide">Live</div>
+                                                <span class="text-white/80 text-xs font-mono">EdVibe Player</span>
+                                            </div>
+                                            <button onclick="openChangeVideoModal()" class="bg-white/10 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-md border border-white/10 shadow-xl flex items-center gap-2 transition-all hover:scale-105">
+                                                <i class="fas fa-search"></i> Find Alternative
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 flex items-center justify-between px-1">
+                                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                                        <i class="fas fa-shield-alt text-indigo-400"></i> Verified Content (In case a video not played, click on "Find Alternative" and change the video.)
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 font-mono">
+                                        Powered by MWD Agra Player
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 md:p-6 space-y-6">
+                                <div class="glass p-4 rounded-xl border border-gray-700/50">
+                                    <div class="flex flex-wrap gap-3 border-b border-gray-700 pb-3 mb-4">
+                                        <button onclick="loadNotesForChapter()" id="notes-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-500/20">
+                                            <i class="fas fa-magic"></i> Generate AI Notes
+                                        </button>
+                                        
+                                        <button onclick="exportNotesToPDF()" id="export-btn" class="hidden px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-200 font-semibold text-sm transition items-center gap-2">
+                                            <i class="fas fa-file-pdf text-red-400"></i> PDF
+                                        </button>
+
+                                        <button onclick="loadLearningTab('quiz')" class="px-4 py-2 glass hover:bg-white/10 rounded-lg text-gray-300 hover:text-white font-semibold text-sm transition">
+                                            <i class="fas fa-question-circle mr-2 text-yellow-400"></i>Take Quiz
+                                        </button>
+                                        
+                                        <button onclick="toggleDoubtChat()" class="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 rounded-lg text-white font-semibold text-sm transition shadow-lg">
+                                            <i class="fas fa-robot mr-2"></i>Clear Doubt
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="doubt-chat-ui" class="doubt-chat-container glass border border-purple-500/30 rounded-xl mb-6">
+                                        <div class="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-3 border-b border-white/10 flex justify-between items-center">
+                                            <span class="font-bold text-sm text-purple-200"><i class="fas fa-sparkles mr-2"></i>AI Tutor (${store.current.topic})</span>
+                                            <button onclick="toggleDoubtChat()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                        </div>
+                                        <div id="doubt-messages" class="h-64 overflow-y-auto p-4 space-y-3 bg-black/20 custom-scrollbar text-sm">
+                                            <div class="text-center text-gray-500 text-xs mt-4">Ask any question about this topic!</div>
+                                        </div>
+                                        <div class="p-3 border-t border-white/10 flex gap-2">
+                                            <input type="text" id="doubt-input" placeholder="What is confusing you?" class="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-purple-500 outline-none">
+                                            <button onclick="sendDoubtMessage()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 rounded-lg"><i class="fas fa-paper-plane"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <div id="learning-content" class="prose prose-invert max-w-none text-gray-300 text-sm md:text-base leading-relaxed notes-section min-h-[200px]">
+                                        <div class="flex flex-col items-center justify-center h-48 text-gray-500 opacity-60">
+                                            <i class="fas fa-book-open text-4xl mb-3"></i>
+                                            <p>Tap "Generate AI Notes" to start learning</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-80 border-l border-gray-700 bg-[#0f141f] flex flex-col h-[400px] md:h-full shrink-0">
+                            <div class="p-3 bg-gray-800/50 border-b border-gray-700 font-bold flex items-center gap-2 text-sm backdrop-blur-md">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                Class Chat <span class="text-xs text-gray-500 font-normal">(${store.user?.standard || 'Gen'})</span>
+                            </div>
+                            
+                            <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar scroll-smooth">
+                                <div class="text-center text-gray-600 mt-10 text-xs">Loading chat...</div>
+                            </div>
+
+                            <form onsubmit="sendClassMessage(event)" class="p-3 bg-gray-800/80 border-t border-gray-700 flex gap-2">
+                                <input id="class-chat-input" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:bg-gray-800 transition" placeholder="Type a message..." autocomplete="off">
+                                <button type="submit" class="text-indigo-400 hover:text-white p-2 rounded-lg hover:bg-indigo-600 transition">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        };
+        // ================= FIXED SOCIAL/PEER CONNECT VIEW =================
+        const ViewSocial = () => {
+            return `
+                <div class="h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] max-w-6xl mx-auto flex flex-col md:flex-row gap-4 pb-2 md:pb-0 p-2 md:p-0">
+                    
+                    <div class="h-[35%] md:h-auto md:w-1/3 glass rounded-2xl flex flex-col overflow-hidden border border-gray-700 peer-list order-1">
+                        <div class="p-3 border-b border-gray-700 bg-gray-800/50">
+                            <h3 class="font-bold flex items-center gap-2 text-sm md:text-base">
+                                <i class="fas fa-users text-indigo-400"></i>
+                                Classmates <span class="text-xs text-gray-500">(${store.user?.standard || 'Gen'})</span>
+                            </h3>
+                        </div>
+                        <div id="peer-list" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                            <div class="loader mx-auto mt-4"></div>
+                        </div>
+                    </div>
+
+                    <div class="h-[65%] md:h-auto md:w-2/3 glass rounded-2xl flex flex-col overflow-hidden border border-gray-700 relative order-2">
+                        <div id="chat-header" class="p-3 border-b border-gray-700 bg-gray-800/50 min-h-[50px] flex items-center">
+                            <div class="font-bold text-gray-400 text-sm truncate">
+                                <i class="fas fa-comment-dots mr-2"></i>
+                                ${store.currentChatPeer ? `Chat with ${store.currentChatPeer.name}` : 'Select a classmate'}
+                            </div>
+                        </div>
+
+                        <div id="peer-chat-container" class="flex-1 p-3 overflow-y-auto bg-[#0b0f19] flex flex-col gap-3 chat-messages">
+                            ${!store.currentChatPeer ? `
+                                <div class="flex h-full items-center justify-center text-gray-500 flex-col opacity-50">
+                                    <i class="fas fa-paper-plane text-4xl mb-2"></i>
+                                    <p class="text-xs">Tap a name above to chat</p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="p-2 bg-gray-800 border-t border-gray-700">
+                            <form onsubmit="sendPeerMessage(event)" class="flex gap-2">
+                                <input type="text" id="peer-msg-input" placeholder="Message..." 
+                                    ${!store.currentChatPeer ? 'disabled' : ''}
+                                    class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 transition">
+                                <button id="peer-send-btn" ${!store.currentChatPeer ? 'disabled' : ''} type="submit" 
+                                    class="bg-indigo-600 ${!store.currentChatPeer ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'} w-10 h-10 rounded-xl text-white flex items-center justify-center transition">
+                                    <i class="fas fa-paper-plane text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const ViewTestSeries = () => `
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold mb-2 gradient-text">Test Series</h2>
+                <p class="text-gray-400 mb-8">Challenge yourself with AI-generated tests</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="glass p-6 rounded-2xl">
+                        <div class="text-4xl mb-4">📝</div>
+                        <h3 class="text-xl font-bold mb-2">Standard Test</h3>
+                        <p class="text-gray-400 mb-4">Comprehensive test covering all subjects in your grade</p>
+                        <button onclick="startTest('standard')" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg font-semibold transition">
+                            Start Standard Test
+                        </button>
+                    </div>
+                    <div class="glass p-6 rounded-2xl">
+                        <div class="text-4xl mb-4">🎯</div>
+                        <h3 class="text-xl font-bold mb-2">Custom Test</h3>
+                        <p class="text-gray-400 mb-4">Select specific topics to test your knowledge</p>
+                        <button onclick="showCustomTestModal()" class="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-semibold transition">
+                            Create Custom Test
+                        </button>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold mb-4">Test History</h3>
+                    ${store.user?.testScores?.length > 0 ? `
+                        <div class="space-y-3">
+                            ${store.user.testScores.slice(-5).reverse().map(test => `
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                                    <div>
+                                        <div class="font-semibold">${test.type === 'standard' ? 'Standard Test' : 'Custom Test'}</div>
+                                        <div class="text-sm text-gray-400">${new Date(test.date).toLocaleDateString()}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold ${test.percentage >= 70 ? 'text-green-400' : test.percentage >= 50 ? 'text-yellow-400' : 'text-red-400'}">${test.percentage}%</div>
+                                        <div class="text-sm text-gray-400">+${test.xpEarned} XP</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+                            <p>No tests taken yet. Start your first test!</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+
+        // ================= FIXED SANDBOX VIEW (RESPONSIVE) =================
+        // ================= FIXED SANDBOX VIEW (With Dynamic Dropdown) =================
+        const ViewSandbox = () => {
+            const currentStd = store.user?.standard || '10th';
+
+            // Initialize dropdowns after render
+            setTimeout(() => {
+                const classSelect = document.getElementById('sandbox-class');
+                if (classSelect) {
+                    classSelect.value = currentStd;
+                    updateSandboxSubjects();
+                }
+            }, 100);
+
+            return `
+                <div class="max-w-7xl mx-auto h-[calc(100vh-140px)] flex flex-col sandbox-container">
+                    <div class="mb-4 md:mb-6">
+                        <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-2">
+                            <i class="fas fa-code mr-2"></i>AI Scenario Sandbox
+                        </h2>
+                        <p class="text-gray-400">Solve real-world problems based on your syllabus</p>
+                    </div>
+                    
+                    <div class="glass p-3 md:p-4 rounded-xl mb-4 sandbox-controls">
+                        <div class="flex flex-wrap gap-2 md:gap-4 items-center">
+                            <select id="sandbox-class" onchange="updateSandboxSubjects()" 
+                                class="flex-1 min-w-[100px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                ${Object.keys(SYLLABUS).map(std =>
+                `<option value="${std}">${std}</option>`
+            ).join('')}
+                                <option value="General">General Skills</option>
+                            </select>
+
+                            <select id="sandbox-subject" onchange="updateSandboxTopics()"
+                                class="flex-1 min-w-[120px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                <option value="">Select Subject</option>
+                            </select>
+
+                            <select id="sandbox-topic-select" onchange="toggleCustomTopic()"
+                                class="flex-1 min-w-[150px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                                <option value="">Select Topic</option>
+                            </select>
+
+                            <input type="text" id="sandbox-topic-custom" placeholder="Type custom topic..." 
+                                class="hidden flex-1 min-w-[150px] bg-gray-800 border border-indigo-500 rounded-lg px-3 py-2 text-sm outline-none">
+
+                            <button onclick="getSandboxChallenge()" 
+                                class="flex-1 min-w-[140px] bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold shadow-lg text-sm transition flex items-center justify-center gap-2">
+                                <i class="fas fa-magic"></i> Generate
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-h-0">
+                        <div class="glass flex flex-col rounded-2xl overflow-hidden border border-gray-700 sandbox-column">
+                            <div class="bg-gray-800/50 p-3 border-b border-gray-700 flex justify-between items-center">
+                                <span class="text-sm font-mono text-gray-400">Challenge Scenario</span>
+                                <span class="text-xs text-indigo-400 bg-indigo-900/30 px-2 py-1 rounded">AI Generated</span>
+                            </div>
+                            
+                            <div id="sandbox-challenge-display" class="p-4 bg-gradient-to-br from-gray-900 to-gray-800 border-b border-gray-700 overflow-y-auto max-h-[150px] md:max-h-[200px]">
+                                <div class="text-center text-gray-400 py-4">
+                                    <i class="fas fa-robot text-3xl mb-2"></i>
+                                    <p>Select a Topic above, then click <b>Generate</b>.</p>
+                                </div>
+                            </div>
+
+                            <textarea id="sandbox-input" 
+                                class="flex-1 bg-[#0f141f] p-4 font-mono text-sm text-gray-200 outline-none resize-none focus:bg-[#131926] transition" 
+                                placeholder="Type your solution/answer here..."></textarea>
+                            
+                            <div class="p-3 bg-gray-800/50 border-t border-gray-700 text-right">
+                                <button onclick="runSandbox()" 
+                                    class="bg-green-600 hover:bg-green-700 px-4 md:px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-green-600/20 transition">
+                                    <i class="fas fa-check-circle mr-2"></i>Submit & Check
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="glass flex flex-col rounded-2xl overflow-hidden border border-gray-700 sandbox-column">
+                            <div class="bg-gray-800/50 p-3 border-b border-gray-700 flex justify-between items-center">
+                                <span class="text-sm font-mono text-gray-400">AI Tutor Feedback</span>
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                </div>
+                            </div>
+                            <div id="sandbox-output" class="flex-1 bg-[#0b0f19] p-4 md:p-6 overflow-y-auto font-mono text-sm">
+                                <div class="text-gray-500 text-center py-8 md:py-20">
+                                    <i class="fas fa-terminal text-3xl md:text-4xl mb-4 opacity-50"></i>
+                                    <p>Feedback will appear here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const ViewTest = () => `
+            <div class="max-w-4xl mx-auto">
+                <div class="glass p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold">${store.ui.testType === 'standard' ? 'Standard Test' : 'Custom Test'}</h2>
+                            <p class="text-gray-400">Question <span id="current-question">${store.currentQuestionIndex + 1}</span> of ${store.testQuestions.length}</p>
+                        </div>
+                        <div class="glass px-3 py-2 rounded-lg text-center">
+                            <div class="text-lg sm:text-xl font-bold" id="test-timer">${Math.floor(store.ui.timer / 60)}:${(store.ui.timer % 60).toString().padStart(2, '0')}</div>
+                            <div class="text-xs text-gray-400">Time Remaining</div>
+                        </div>
+                    </div>
+                    
+                    <div id="test-questions">
+                        ${store.testQuestions.map((q, idx) => `
+                            <div class="mb-8 ${idx === store.currentQuestionIndex ? '' : 'hidden'}" id="question-${idx}">
+                                <div class="text-lg font-semibold mb-6">${idx + 1}. ${q.q}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                    ${q.options.map((opt, optIdx) => {
+            let btnClass = 'bg-gray-800 hover:bg-gray-700';
+            if (store.userAnswers[idx] === optIdx) btnClass = 'bg-indigo-600';
+            if (!store.ui.testActive) {
+                if (optIdx === q.ans) btnClass = 'bg-green-600';
+                else if (store.userAnswers[idx] === optIdx) btnClass = 'bg-red-600';
+            }
+            return `
+                                            <button onclick="${store.ui.testActive ? `selectAnswer(${idx},${optIdx})` : ''}" 
+                                                class="p-4 rounded-xl text-left transition ${btnClass}">
+                                                ${opt}
+                                            </button>`;
+        }).join('')}
+                                </div>
+                                <div class="explanation mt-6 p-4 bg-blue-900/20 rounded-lg border-l-4 border-blue-500 ${!store.ui.testActive ? '' : 'hidden'}">
+                                    ${q.explanation ? `<strong>Explanation:</strong> ${q.explanation}` : 'Check your answer above.'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button onclick="prevQuestion()" class="px-6 py-3 glass rounded-lg hover:bg-white/5 transition">
+                            <i class="fas fa-arrow-left mr-2"></i>Previous
+                        </button>
+                        <div class="flex gap-1 sm:gap-2 flex-wrap justify-center">
+                            ${store.testQuestions.map((_, idx) => `
+                                <button onclick="goToQuestion(${idx})" 
+                                    class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base ${idx === store.currentQuestionIndex ? 'bg-indigo-600' : 'glass'} ${store.userAnswers[idx] !== undefined ? 'bg-indigo-500/50' : ''}">
+                                    ${idx + 1}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button onclick="nextQuestion()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition">
+                            Next <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+
+                    ${store.ui.testActive ? `
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="submitTest()" class="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Test
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="store.view='testReport'; render()" class="px-8 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-semibold transition">
+                                Back to Report
+                            </button>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+
+        const ViewTestReport = () => {
+            const latestTest = store.user?.testScores?.[store.user.testScores.length - 1];
+            if (!latestTest) return `
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass p-8 rounded-2xl text-center">
+                        <div class="text-6xl mb-6">📝</div>
+                        <h2 class="text-3xl font-bold mb-2">No Test Results</h2>
+                        <p class="text-gray-400 mb-8">Take a test to see your results</p>
+                        <button onclick="store.view='testSeries'; render()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition">
+                            Take a Test
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass p-8 rounded-2xl text-center">
+                        <div class="text-6xl mb-6 ${latestTest.percentage >= 70 ? 'text-green-400' : latestTest.percentage >= 50 ? 'text-yellow-400' : 'text-red-400'}">
+                            ${latestTest.percentage >= 70 ? '🎉' : latestTest.percentage >= 50 ? '👍' : '📝'}
+                        </div>
+                        <h2 class="text-3xl font-bold mb-2">Test Completed!</h2>
+                        <p class="text-gray-400 mb-8">Here's your performance analysis</p>
+                        <div class="grid grid-cols-3 gap-4 mb-8">
+                            <div class="glass p-4 rounded-xl">
+                                <div class="text-3xl font-bold ${latestTest.percentage >= 70 ? 'text-green-400' : latestTest.percentage >= 50 ? 'text-yellow-400' : 'text-red-400'}">
+                                    ${latestTest.percentage}%
+                                </div>
+                                <div class="text-sm text-gray-400">Score</div>
+                            </div>
+                            <div class="glass p-4 rounded-xl">
+                                <div class="text-3xl font-bold text-yellow-400">${latestTest.xpEarned}</div>
+                                <div class="text-sm text-gray-400">XP Earned</div>
+                            </div>
+                            <div class="glass p-4 rounded-xl">
+                                <div class="text-3xl font-bold text-indigo-400">
+                                    ${Math.floor(latestTest.timeTaken / 60)}:${(latestTest.timeTaken % 60).toString().padStart(2, '0')}
+                                </div>
+                                <div class="text-sm text-gray-400">Time Taken</div>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-xl text-left mb-8">
+                            <h3 class="text-xl font-bold mb-4">AI Analysis</h3>
+                            <p class="text-gray-300">
+                                ${latestTest.percentage >= 90 ? 'Excellent work! You have a strong grasp of the material.' :
+                    latestTest.percentage >= 70 ? 'Good job! You understand most concepts well.' :
+                        latestTest.percentage >= 50 ? 'Keep practicing! Focus on areas where you struggled.' :
+                            'Review the material and try again. Focus on understanding the basics.'}
+                            </p>
+                        </div>
+                        <div class="flex gap-4 justify-center flex-wrap">
+                            <button onclick="store.view='test'; render()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition">
+                                Review Solutions
+                            </button>
+                            <button onclick="store.view='dashboard'; render()" class="px-6 py-3 glass rounded-lg hover:bg-white/5 transition">
+                                Dashboard
+                            </button>
+                            <button onclick="store.view='testSeries'; render()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition">
+                                New Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const ViewProfile = () => {
+            const level = Math.floor((store.user?.xp || 0) / 1000) + 1;
+            const xpInLevel = (store.user?.xp || 0) % 1000;
+            const xpForNextLevel = 1000;
+            const progress = (xpInLevel / xpForNextLevel) * 100;
+
+            return `
+                <div class="max-w-6xl mx-auto pb-20 md:pb-0">
+                    <div class="glass p-6 md:p-8 rounded-2xl mb-6 md:mb-8">
+                        <div class="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                            <div class="relative">
+                                <img src="${store.user?.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(store.user?.name || 'Student')}" 
+                                    class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-indigo-500 shadow-2xl object-cover">
+                                <div class="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-500 to-red-500 text-black font-bold px-3 py-1 rounded-full text-sm shadow-lg">
+                                    Lv. ${level}
+                                </div>
+                            </div>
+                            <div class="flex-1 text-center md:text-left w-full">
+                                <h2 class="text-2xl md:text-3xl font-bold mb-1">${store.user?.name || 'Student'}</h2>
+                                <p class="text-gray-400 mb-4 text-sm">${store.user?.email || 'No email'} • ${store.user?.standard || 'No Class'}</p>
+                                
+                                <div class="mb-4 bg-gray-800/50 p-3 rounded-xl border border-gray-700/50">
+                                    <div class="flex justify-between text-xs md:text-sm mb-2 font-mono text-indigo-300">
+                                        <span>Level Progress</span>
+                                        <span>${xpInLevel} / ${xpForNextLevel} XP</span>
+                                    </div>
+                                    <div class="w-full bg-gray-900 h-3 rounded-full overflow-hidden shadow-inner">
+                                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full transition-all duration-1000 relative" 
+                                            style="width: ${progress}%">
+                                            <div class="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4">
+                                    <div class="bg-white/5 p-2 rounded-lg text-center">
+                                        <div class="text-xl md:text-2xl font-bold text-yellow-400">${store.user?.streak || 0}</div>
+                                        <div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Streak</div>
+                                    </div>
+                                    <div class="bg-white/5 p-2 rounded-lg text-center">
+                                        <div class="text-xl md:text-2xl font-bold text-indigo-400">${store.user?.xp || 0}</div>
+                                        <div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Total XP</div>
+                                    </div>
+                                    <div class="bg-white/5 p-2 rounded-lg text-center">
+                                        <div class="text-xl md:text-2xl font-bold text-green-400">${store.user?.completedTopics?.length || 0}</div>
+                                        <div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Topics</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 flex flex-wrap gap-2 justify-center md:justify-start">
+                                    <button onclick="store.view='editProfile'; render()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button onclick="changeClassModal()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                                        <i class="fas fa-graduation-cap"></i> Class
+                                    </button>
+                                    <button onclick="logout()" class="bg-red-900/30 text-red-400 hover:bg-red-900/50 border border-red-800/50 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col-reverse md:block gap-8">
+                        
+                        <div class="mb-8">
+                            <h3 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 px-2 border-l-4 border-yellow-500">Badge Collection</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 md:gap-4">
+                                ${Object.values(BADGES).map(badge => {
+                const hasBadge = store.user?.badges?.includes(badge.id) || false;
+                return `
+                                        <div class="glass p-4 rounded-xl text-center transition-all duration-300 ${hasBadge ? 'transform hover:scale-105 border border-yellow-500/30 bg-yellow-500/10' : 'opacity-40 grayscale'}">
+                                            <div class="text-4xl mb-3 ${hasBadge ? 'badge-unlocked drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : ''}">${badge.icon}</div>
+                                            <div class="font-bold text-sm ${hasBadge ? 'text-white' : 'text-gray-500'}">${badge.name}</div>
+                                            <div class="text-[10px] text-gray-400 mt-1 line-clamp-2">${badge.desc}</div>
+                                            ${hasBadge ? `<div class="mt-2 text-[10px] text-green-400 font-mono bg-green-900/30 rounded py-1">+${badge.xp} XP</div>` : ''}
+                                        </div>
+                                    `;
+            }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="glass p-6 rounded-2xl mb-8 border border-gray-700/50">
+                            <h3 class="text-xl font-bold mb-6 px-2 border-l-4 border-indigo-500">Learning Statistics</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                                <div>
+                                    <h4 class="font-bold text-gray-400 text-xs uppercase mb-3 tracking-wider">Recent Activity</h4>
+                                    <div class="space-y-3">
+                                        ${(store.user?.xpHistory?.slice(-5).reverse() || []).map(activity => `
+                                            <div class="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-white/5 transition">
+                                                <span class="truncate pr-2">${activity.reason || 'Activity'}</span>
+                                                <span class="text-green-400 font-mono whitespace-nowrap">+${activity.amount || 0} XP</span>
+                                            </div>
+                                        `).join('')}
+                                        ${(!store.user?.xpHistory?.length) ? '<div class="text-gray-600 text-sm text-center py-4 italic">Start learning to see activity!</div>' : ''}
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-bold text-gray-400 text-xs uppercase mb-3 tracking-wider">Subject Mastery</h4>
+                                    <div class="space-y-3">
+                                        ${store.user?.standard && SYLLABUS[store.user.standard] ?
+                    Object.keys(SYLLABUS[store.user.standard]).map(subject => {
+                        const completed = (store.user.completedTopics || []).filter(t => t.startsWith(subject)).length;
+                        const total = SYLLABUS[store.user.standard][subject].length;
+                        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                        return `
+                                                    <div>
+                                                        <div class="flex justify-between text-xs mb-1 text-gray-300">
+                                                            <span>${subject}</span>
+                                                            <span>${percentage}%</span>
+                                                        </div>
+                                                        <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                                                            <div class="bg-indigo-500 h-full transition-all duration-1000" style="width: ${percentage}%"></div>
+                                                        </div>
+                                                    </div>
+                                                `;
+                    }).join('') :
+                    '<div class="text-gray-600 text-sm text-center py-4">Select a class to view mastery</div>'
+                }
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-gray-400 text-xs uppercase mb-3 tracking-wider">Performance</h4>
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                                            <span class="text-sm text-gray-300">Badges</span>
+                                            <span class="text-yellow-400 font-bold">${store.user?.badges?.length || 0} <span class="text-gray-600 text-xs">/ ${Object.keys(BADGES).length}</span></span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                                            <span class="text-sm text-gray-300">Tests Taken</span>
+                                            <span class="text-indigo-400 font-bold">${store.user?.testScores?.length || 0}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                                            <span class="text-sm text-gray-300">Avg. Score</span>
+                                            <span class="text-green-400 font-bold">
+                                                ${store.user?.testScores?.length ?
+                    Math.round(store.user.testScores.reduce((a, b) => a + b.percentage, 0) / store.user.testScores.length) : 0}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        };
+
+        const ViewEditProfile = () => `
+            <div class="max-w-2xl mx-auto">
+                <div class="glass p-8 rounded-2xl">
+                    <h2 class="text-3xl font-bold mb-6 gradient-text">Edit Profile</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Full Name</label>
+                            <input type="text" id="edit-name" value="${store.user?.name || ''}" 
+                                class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" id="edit-email" value="${store.user?.email || ''}" 
+                                class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition" disabled>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Profile Photo URL</label>
+                            <input type="text" id="edit-photo" value="${store.user?.photoURL || ''}" 
+                                placeholder="https://example.com/photo.jpg" 
+                                class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Class/Grade</label>
+                            <select id="edit-standard" 
+                                class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none transition">
+                                ${Object.keys(SYLLABUS).map(std =>
+            `<option value="${std}" ${store.user?.standard === std ? 'selected' : ''}>${std}</option>`
+        ).join('')}
+                            </select>
+                        </div>
+                        <div class="pt-4 flex gap-4">
+                            <button onclick="saveProfile()" 
+                                class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition flex-1">
+                                Save Changes
+                            </button>
+                            <button onclick="store.view='profile'; render()" 
+                                class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition flex-1">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const ViewTestLoading = () => `
+            <div class="max-w-4xl mx-auto">
+                <div class="glass p-8 rounded-2xl text-center">
+                    <div class="loader mx-auto mb-6"></div>
+                    <h2 class="text-2xl font-bold mb-4">Generating Your Test</h2>
+                    <p class="text-gray-400 mb-2">Using AI to create personalized questions...</p>
+                    <p class="text-sm text-gray-500">This may take a moment as we generate high-quality questions</p>
+                    <div class="mt-8 grid grid-cols-3 gap-4">
+                        <div class="p-4 bg-indigo-900/20 rounded-lg">
+                            <div class="text-2xl mb-2">🤖</div>
+                            <p class="text-sm">AI Question Generation</p>
+                        </div>
+                        <div class="p-4 bg-purple-900/20 rounded-lg">
+                            <div class="text-2xl mb-2">📊</div>
+                            <p class="text-sm">Difficulty Balancing</p>
+                        </div>
+                        <div class="p-4 bg-blue-900/20 rounded-lg">
+                            <div class="text-2xl mb-2">🎯</div>
+                            <p class="text-sm">Topic Coverage</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // ================= HELPER COMPONENTS =================
+        const StatCard = (label, val, icon, color) => `
+            <div class="glass p-3 md:p-4 rounded-xl flex items-center gap-3 md:gap-4 hover:transform hover:scale-[1.02] transition cursor-pointer">
+                <div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center text-xl ${color}">
+                    <i class="${icon}"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold font-mono">${val}</div>
+                    <div class="text-xs text-gray-400">${label}</div>
+                </div>
+            </div>
+        `;
+
+        // ================= FIXED EVENT HANDLERS =================
+        window.exportNotesToPDF = () => {
+            const originalElement = document.getElementById('learning-content');
+            if (!originalElement) return;
+
+            // 1. Create a temporary container for formatting
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <h1 style="color: #000; font-size: 24px; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                    ${store.current.topic} - Study Notes
+                </h1>
+                ${originalElement.innerHTML}
+            `;
+
+            // 2. Apply "Normal PDF" Styles (Black Text, White Background)
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.style.width = '800px'; // Standard A4 width approx
+            container.style.backgroundColor = '#ffffff';
+            container.style.color = '#000000';
+            container.style.padding = '40px';
+            container.style.fontFamily = 'Arial, sans-serif';
+            container.style.lineHeight = '1.6';
+
+            // 3. Force Style Overrides for Inner Elements
+            const allElements = container.querySelectorAll('*');
+            allElements.forEach(el => {
+                // Reset colors to black for PDF
+                el.style.color = '#000000';
+                el.style.backgroundColor = 'transparent';
+
+                // Ensure bold headings stay bold
+                if (['H1', 'H2', 'H3', 'STRONG', 'B'].includes(el.tagName)) {
+                    el.style.fontWeight = 'bold';
+                    el.style.color = '#000000'; // Ensure headings are black
+                }
+
+                // Fix lists
+                if (el.tagName === 'UL' || el.tagName === 'OL') {
+                    el.style.paddingLeft = '20px';
+                }
+            });
+
+            document.body.appendChild(container);
+
+            // 4. Update Button State
+            const btn = document.getElementById('export-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loader w-3 h-3 border-2 inline-block mr-2"></div> Saving...';
+
+            const topic = store.current.topic || 'EdVibe_Notes';
+
+            const opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `${topic.replace(/\s+/g, '_')}_Notes.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, // Force White Background
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 5. Generate & Save
+            html2pdf().set(opt).from(container).save().then(() => {
+                document.body.removeChild(container); // Cleanup
+                btn.innerHTML = originalText;
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'PDF Downloaded Successfully',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    background: '#1e293b',
+                    color: '#fff'
+                });
+            }).catch(err => {
+                console.error("PDF Error:", err);
+                document.body.removeChild(container);
+                btn.innerHTML = originalText;
+            });
+        };
+        // Notes loading function
+        window.loadNotesForChapter = async () => {
+            const container = $('#learning-content');
+            const btn = $('#notes-btn');
+            const exportBtn = $('#export-btn');
+
+            if (!container || !store.current.topic) return;
+
+            // UI Loading State
+            btn.innerHTML = '<div class="loader w-4 h-4 border-2 inline-block mr-2"></div> Generating...';
+            btn.disabled = true;
+            exportBtn.classList.add('hidden'); // Hide export while regenerating
+
+            container.innerHTML = `
+        <div class="p-8 text-center animate-pulse">
+            <div class="text-6xl mb-4">✨</div>
+            <p class="text-gray-400">AI is crafting your study notes for <span class="text-indigo-300">${store.current.topic}</span>...</p>
+        </div>
+    `;
+
+            try {
+                const content = await getGeminiContent(
+                    'notes',
+                    store.current.topic,
+                    store.current.subject,
+                    store.user?.standard || 'General'
+                );
+
+                container.innerHTML = content;
+
+                // Success State
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Notes Generated';
+                btn.classList.remove('border-indigo-500', 'text-white');
+                btn.classList.add('border-green-500', 'text-green-400');
+
+                // Show Export Button
+                exportBtn.classList.remove('hidden');
+                exportBtn.classList.add('flex');
+
+            } catch (error) {
+                console.error('Error loading notes:', error);
+                container.innerHTML = `<div class="text-red-400 text-center p-4">Failed to generate notes. Please try again.</div>`;
+                btn.innerHTML = '<i class="fas fa-redo mr-2"></i>Retry Generation';
+                btn.disabled = false;
+            }
+        };
+
+        // Original loadLearningTab function
+        window.loadLearningTab = async (tab) => {
+            if (tab === 'notes') {
+                loadNotesForChapter();
+                return;
+            }
+
+            const container = $('#learning-content');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="loader mx-auto mb-4"></div>
+                    <p class="text-gray-400">Generating ${tab === 'quiz' ? 'quiz questions' : 'study notes'} for <span class="text-indigo-300">${store.current.topic}</span>...</p>
+                    <p class="text-sm text-gray-500 mt-2">Using AI to create personalized content</p>
+                </div>
+            `;
+
+            try {
+                const content = await getGeminiContent(
+                    tab === 'quiz' ? 'quiz' : 'notes',
+                    store.current.topic,
+                    store.current.subject,
+                    store.user?.standard || 'General'
+                );
+
+                if (tab === 'quiz') {
+                    try {
+                        let quizData;
+                        try {
+                            quizData = JSON.parse(content);
+                        } catch (parseError) {
+                            const jsonMatch = content.match(/\[.*\]/s);
+                            if (jsonMatch) quizData = JSON.parse(jsonMatch[0]);
+                            else throw new Error('Invalid JSON format');
+                        }
+
+                        if (!Array.isArray(quizData)) throw new Error('Quiz data is not an array');
+                        store.quizData = quizData;
+                        store.quizAnswers = store.quizAnswers || [];
+
+                        container.innerHTML = `
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="text-xl font-bold">Quick Quiz: ${store.current.topic}</h3>
+                                    <span class="text-sm text-gray-400">${quizData.length} questions</span>
+                                </div>
+                                <p class="text-gray-400 mb-4">Test your understanding of ${store.current.topic}</p>
+                                ${quizData.map((q, idx) => `
+                                    <div class="glass p-4 rounded-xl quiz-question" data-idx="${idx}">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <p class="font-semibold text-lg">${idx + 1}. ${q.q}</p>
+                                            <span class="text-xs px-2 py-1 rounded-full ${store.quizAnswers && store.quizAnswers[idx] !== undefined ?
+                                store.quizAnswers[idx] === q.ans ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400' :
+                                'bg-gray-800 text-gray-400'}">
+                                                ${store.quizAnswers && store.quizAnswers[idx] !== undefined ?
+                                store.quizAnswers[idx] === q.ans ? 'Correct' : 'Incorrect' :
+                                'Not answered'}
+                                            </span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                            ${q.options.map((opt, optIdx) => `
+                                                <button onclick="checkQuizAnswer(${idx},${optIdx},${q.ans})" 
+                                                    class="p-3 rounded-lg text-left transition-all ${store.quizAnswers && store.quizAnswers[idx] === optIdx ?
+                                        optIdx === q.ans ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700' :
+                                        'bg-gray-800 hover:bg-gray-700'}">
+                                                    <div class="flex items-center">
+                                                        <span class="mr-3 w-6 h-6 rounded-full flex items-center justify-center ${store.quizAnswers && store.quizAnswers[idx] === optIdx ?
+                                        optIdx === q.ans ? 'bg-green-800' : 'bg-red-800' : 'bg-gray-700'}">
+                                                            ${String.fromCharCode(65 + optIdx)}
+                                                        </span>
+                                                        ${opt}
+                                                    </div>
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                        <div class="explanation mt-3 p-3 bg-blue-900/20 rounded-lg border-l-4 border-blue-500 ${store.quizAnswers && store.quizAnswers[idx] !== undefined ? '' : 'hidden'}">
+                                            <strong class="text-blue-300">📝 Explanation:</strong>
+                                            <p class="mt-1">${q.explanation || 'This answer is correct based on the fundamental concepts.'}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                <div class="glass p-4 rounded-xl mt-6">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="font-semibold">Quiz Summary</p>
+                                            <p class="text-sm text-gray-400">
+                                                Score: ${store.quizAnswers ? store.quizAnswers.filter((ans, idx) => ans === quizData[idx]?.ans).length : 0}/${quizData.length}
+                                            </p>
+                                        </div>
+                                        <button onclick="resetQuiz()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm">
+                                            Reset Quiz
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error('Quiz parsing error:', error);
+                        container.innerHTML = `
+                            <div class="text-center py-8">
+                                <div class="text-4xl mb-4">😕</div>
+                                <h3 class="text-xl font-bold mb-2">Quiz Generation Failed</h3>
+                                <p class="text-gray-400 mb-4">We couldn't generate the quiz at this moment.</p>
+                                <button onclick="loadLearningTab('quiz')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">
+                                    Try Again
+                                </button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    container.innerHTML = content;
+                }
+            } catch (error) {
+                console.error('Error loading content:', error);
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-4xl mb-4">⚠️</div>
+                        <h3 class="text-xl font-bold mb-2">Content Loading Failed</h3>
+                        <p class="text-gray-400 mb-4">${error.message || 'Please check your internet connection and try again.'}</p>
+                        <button onclick="loadLearningTab('${tab}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        };
+
+        // ================= FIXED CHAT FUNCTIONS =================
+        // ================= FIXED CHAT FUNCTIONS (ROBUST) =================
+        let classChatUnsubscribe = null;
+        let peerChatUnsubscribe = null;
+
+        // --- 1. CLASS CHAT LOGIC ---
+        window.listenToClassChat = () => {
+            if (classChatUnsubscribe) classChatUnsubscribe();
+
+            // Use 'General' if no standard is set
+            const standard = store.user?.standard || 'General';
+            const container = document.getElementById('chat-messages');
+
+            if (!container) return;
+
+            // Define Reference
+            const messagesRef = db.collection('class_chats').doc(standard).collection('messages');
+
+            classChatUnsubscribe = messagesRef
+                .orderBy('timestamp', 'asc')
+                .limitToLast(50)
+                .onSnapshot((snapshot) => {
+                    const container = document.getElementById('chat-messages'); // Re-grab in case of page nav
+                    if (!container) return;
+
+                    if (snapshot.empty) {
+                        container.innerHTML = `<div class="text-center text-gray-500 mt-4 text-xs">No messages in ${standard}. Say hi! 👋</div>`;
+                        return;
+                    }
+
+                    const html = snapshot.docs.map(doc => {
+                        const msg = doc.data();
+                        const isMe = msg.senderId === store.user.uid;
+                        // Handle timestamp safely
+                        const time = msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...';
+
+                        return `
+                        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2 fade-in">
+                            <div class="${isMe ? 'chat-bubble-me' : 'chat-bubble-peer'} p-2 px-3 max-w-[85%] text-sm relative rounded-xl">
+                                ${!isMe ? `<div class="text-[10px] text-indigo-300 font-bold mb-1">${msg.senderName}</div>` : ''}
+                                <div>${msg.text}</div>
+                                <div class="text-[9px] opacity-50 mt-1 text-right">${time}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                    container.innerHTML = html;
+                    container.scrollTop = container.scrollHeight;
+                }, (error) => {
+                    console.error("Class Chat Error:", error);
+                    if (container) container.innerHTML = `<div class="text-red-400 text-xs text-center p-2">Chat Error. Try refreshing.</div>`;
+                });
+        };
+
+        window.sendClassMessage = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('class-chat-input');
+            const text = input.value.trim();
+            if (!text || !store.user) return;
+
+            const standard = store.user.standard || 'General';
+            input.value = ''; // Clear immediately for better UX
+
+            try {
+                // 1. Ensure Parent Doc Exists
+                await db.collection('class_chats').doc(standard).set({ lastActive: new Date() }, { merge: true });
+
+                // 2. Add Message
+                await db.collection('class_chats').doc(standard).collection('messages').add({
+                    text: text,
+                    senderId: store.user.uid,
+                    senderName: store.user.name,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Send Error:", error);
+                Swal.fire("Error", "Message could not be sent.", "error");
+            }
+        };
+
+        // --- 2. PEER CHAT LOGIC ---
+        window.initPeerList = async () => {
+            const listDiv = document.getElementById('peer-list');
+            if (!listDiv || !store.user) return;
+
+            listDiv.innerHTML = '<div class="flex justify-center p-4"><div class="loader w-6 h-6 border-2"></div></div>';
+
+            try {
+                // Get users in same standard
+                const snapshot = await db.collection('users')
+                    .where('standard', '==', store.user.standard)
+                    .limit(20)
+                    .get();
+
+                // Filter out self
+                const peers = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(u => u.id !== store.user.uid);
+
+                if (peers.length === 0) {
+                    listDiv.innerHTML = `<div class="text-center text-gray-500 p-4 text-sm">No classmates found.<br>Invite friends!</div>`;
+                    return;
+                }
+
+                listDiv.innerHTML = peers.map(peer => `
+                    <div onclick="openPeerChat('${peer.id}', '${peer.name}')" 
+                         class="p-3 hover:bg-white/5 rounded-xl cursor-pointer flex items-center gap-3 transition group border border-transparent hover:border-gray-700">
+                        <div class="relative">
+                            <img src="${peer.photoURL || 'https://ui-avatars.com/api/?name=' + peer.name}" class="w-10 h-10 rounded-full bg-gray-800 object-cover">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0b0f19] rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-sm text-gray-200 truncate">${peer.name}</div>
+                            <div class="text-xs text-gray-500">Tap to chat</div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error("Peer List Error:", error);
+                listDiv.innerHTML = `<div class="text-red-400 text-xs text-center">Failed to load peers.</div>`;
+            }
+        };
+
+        window.openPeerChat = (targetUid, targetName) => {
+            store.currentChatPeer = { uid: targetUid, name: targetName };
+
+            // UI Updates
+            document.getElementById('chat-header').innerHTML = `
+                <div class="font-bold text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> ${targetName}
+                </div>`;
+
+            const input = document.getElementById('peer-msg-input');
+            const btn = document.getElementById('peer-send-btn');
+            input.disabled = false;
+            btn.disabled = false;
+            input.placeholder = `Message ${targetName}...`;
+
+            // Sort UIDs to ensure consistent Chat ID (e.g. "uidA_uidB")
+            const chatId = [store.user.uid, targetUid].sort().join('_');
+
+            // Unsubscribe previous listener
+            if (peerChatUnsubscribe) peerChatUnsubscribe();
+
+            const container = document.getElementById('peer-chat-container');
+            container.innerHTML = `<div class="flex h-full items-center justify-center"><div class="loader w-6 h-6 border-2"></div></div>`;
+
+            // Start Listening
+            peerChatUnsubscribe = db.collection('chats').doc(chatId).collection('messages')
+                .orderBy('timestamp', 'asc')
+                .limitToLast(50)
+                .onSnapshot((snapshot) => {
+                    const chatContainer = document.getElementById('peer-chat-container');
+                    if (!chatContainer) return;
+
+                    if (snapshot.empty) {
+                        chatContainer.innerHTML = `
+                            <div class="flex h-full flex-col items-center justify-center text-gray-500 opacity-50">
+                                <i class="fas fa-comments text-4xl mb-2"></i>
+                                <p>Start a conversation!</p>
+                            </div>`;
+                        return;
+                    }
+
+                    chatContainer.innerHTML = snapshot.docs.map(doc => {
+                        const msg = doc.data();
+                        const isMe = msg.senderId === store.user.uid;
+                        return `
+                            <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-2 fade-in">
+                                <div class="${isMe ? 'chat-bubble-me' : 'chat-bubble-peer'} p-3 px-4 max-w-[80%] text-sm break-words">
+                                    ${msg.text}
+                                </div>
+                            </div>`;
+                    }).join('');
+
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                });
+        };
+
+        window.sendPeerMessage = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('peer-msg-input');
+            const text = input.value.trim();
+            const peer = store.currentChatPeer;
+
+            if (!text || !peer || !store.user) return;
+
+            input.value = ''; // Clear Input
+
+            // Generate Chat ID
+            const chatId = [store.user.uid, peer.uid].sort().join('_');
+
+            try {
+                // 1. Create/Update Chat Document (Important for Security Rules)
+                await db.collection('chats').doc(chatId).set({
+                    participants: [store.user.uid, peer.uid],
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // 2. Add Message
+                await db.collection('chats').doc(chatId).collection('messages').add({
+                    text: text,
+                    senderId: store.user.uid,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 3. Award Badge (optional logic)
+                if (!store.user.badges?.includes('socialite')) awardBadge('socialite');
+
+            } catch (error) {
+                console.error("Peer Send Error:", error);
+                input.value = text; // Restore text if failed
+                Swal.fire("Error", "Failed to send message", "error");
+            }
+        };
+
+        // ================= SANDBOX FUNCTIONS =================
+        window.updateSandboxSubjects = () => {
+            const classSelect = document.getElementById('sandbox-class');
+            const subjectSelect = document.getElementById('sandbox-subject');
+            const topicSelect = document.getElementById('sandbox-topic-select');
+
+            if (!classSelect || !subjectSelect) return;
+
+            const std = classSelect.value;
+            let subjects = [];
+
+            if (SYLLABUS[std]) {
+                subjects = Object.keys(SYLLABUS[std]);
+            } else {
+                subjects = ['General Skills', 'Programming', 'Logic'];
+            }
+
+            // Populate Subjects
+            subjectSelect.innerHTML = `<option value="">Select Subject</option>` +
+                subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            // Reset Topic
+            if (topicSelect) topicSelect.innerHTML = `<option value="">Select Topic</option>`;
+        };
+        window.updateSandboxTopics = () => {
+            const classSelect = document.getElementById('sandbox-class');
+            const subjectSelect = document.getElementById('sandbox-subject');
+            const topicSelect = document.getElementById('sandbox-topic-select');
+
+            if (!classSelect || !subjectSelect || !topicSelect) return;
+
+            const std = classSelect.value;
+            const sub = subjectSelect.value;
+
+            let topics = [];
+
+            if (SYLLABUS[std] && SYLLABUS[std][sub]) {
+                topics = SYLLABUS[std][sub];
+            } else {
+                topics = ['Basics', 'Advanced Concepts', 'Real World Application'];
+            }
+
+            // Populate Topics + "Other" Option
+            topicSelect.innerHTML =
+                `<option value="">Select Topic</option>` +
+                topics.map(t => `<option value="${t}">${t}</option>`).join('') +
+                `<option value="custom" class="text-yellow-400 font-bold">✨ Other / Custom...</option>`;
+
+            // Hide custom input initially
+            document.getElementById('sandbox-topic-custom').classList.add('hidden');
+            topicSelect.classList.remove('hidden');
+        }; window.toggleCustomTopic = () => {
+            const select = document.getElementById('sandbox-topic-select');
+            const input = document.getElementById('sandbox-topic-custom');
+
+            if (select.value === 'custom') {
+                select.classList.add('hidden');
+                input.classList.remove('hidden');
+                input.focus();
+            }
+        };
+        window.getSandboxChallenge = async () => {
+            const std = document.getElementById('sandbox-class').value;
+            const subject = document.getElementById('sandbox-subject').value;
+
+            // Determine Topic Source
+            const topicSelect = document.getElementById('sandbox-topic-select');
+            const topicCustom = document.getElementById('sandbox-topic-custom');
+
+            let topic = topicSelect ? topicSelect.value : '';
+            if (topic === 'custom' && topicCustom) {
+                topic = topicCustom.value;
+            } else if (!topic && document.getElementById('sandbox-topic')) {
+                // Fallback for mobile view if IDs differ
+                topic = document.getElementById('sandbox-topic').value;
+            }
+
+            if (!subject) { Swal.fire('Select Subject', 'Please choose a subject first.', 'warning'); return; }
+            if (!topic) { Swal.fire('Select Topic', 'Please select or type a topic.', 'warning'); return; }
+
+            const display = document.getElementById('sandbox-challenge-display');
+            const inputArea = document.getElementById('sandbox-input');
+
+            display.innerHTML = `<div class="flex items-center justify-center h-full text-indigo-400 gap-2"><div class="loader w-5 h-5 border-2"></div> Generating Scenario...</div>`;
+            inputArea.value = '';
+
+            const prompt = `
+                Generate a "Real-World Scenario Problem" for a student in Class ${std} studying ${subject} about "${topic}".
+                
+                Format:
+                1. **Scenario**: A short, realistic situation (engineering, nature, daily life) related to the topic.
+                2. **Data**: Specific numbers or facts needed to solve it.
+                3. **Task**: The specific question to answer.
+                
+                Keep it under 100 words. Do NOT provide the solution.
+            `;
+
+            try {
+                // USE 'sandbox_gen' to expect TEXT, not JSON
+                const text = await getGeminiContent('sandbox_gen', prompt);
+
+                store.currentSandboxChallenge = {
+                    std, subject, topic,
+                    question: text
+                };
+
+                // Format output nicely
+                const formatted = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>')
+                    .replace(/\n/g, '<br>');
+
+                display.innerHTML = `<div class="prose prose-sm prose-invert text-gray-200">${formatted}</div>`;
+
+            } catch (error) {
+                console.error("Sandbox Error", error);
+                display.innerHTML = `<div class="text-red-400 text-center">Generation Failed. Check API Key.</div>`;
+            }
+        };
+
+        window.runSandbox = async () => {
+            const input = document.getElementById('sandbox-input').value;
+            const outputDiv = document.getElementById('sandbox-output');
+            const context = store.currentSandboxChallenge;
+
+            if (!input.trim() || !context) {
+                Swal.fire('Wait', 'Please generate a scenario and type your answer.', 'warning');
+                return;
+            }
+
+            outputDiv.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 text-indigo-400 animate-pulse"><div class="text-4xl">🤖</div><div>Checking...</div></div>`;
+
+            const prompt = `
+                Act as a teacher.
+                Context: Class ${context.std}, ${context.subject}, Topic: ${context.topic}
+                Question: "${context.question}"
+                Student Answer: "${input}"
+
+                Return JSON ONLY:
+                {
+                    "scores": { "accuracy": 0-100, "creativity": 0-100, "clarity": 0-100 },
+                    "feedback_html": "Short feedback. Use **bold** for corrections and $symbols$ for variables."
+                }
+            `;
+
+            try {
+                const content = await getGeminiContent('sandbox_check', prompt);
+                let data = { scores: { accuracy: 0, creativity: 0, clarity: 0 }, feedback_html: "Error parsing AI response." };
+
+                try {
+                    const jsonStr = content.replace(/```json|```/g, '').trim();
+                    const start = jsonStr.indexOf('{');
+                    const end = jsonStr.lastIndexOf('}');
+                    if (start !== -1 && end !== -1) {
+                        data = JSON.parse(jsonStr.substring(start, end + 1));
+                    }
+                } catch (e) { console.warn("JSON Parse Fail", e); }
+
+                // Helper to format the feedback text (Bold & Math)
+                const parseAIText = (text) => {
+                    if (!text) return '';
+                    return text
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>') // Bold
+                        .replace(/\$(.*?)\$/g, '<span class="font-mono text-yellow-400 bg-gray-800 px-1 rounded mx-1">$1</span>') // Math
+                        .replace(/\n/g, '<br>'); // New lines
+                };
+
+                // Render Results
+                const scoreBar = (lbl, val, col) => `
+                    <div class="text-center">
+                        <div class="text-2xl font-bold ${col}">${val}</div>
+                        <div class="text-[10px] text-gray-500 uppercase">${lbl}</div>
+                        <div class="h-1 bg-gray-700 mt-1 rounded overflow-hidden"><div class="h-full ${col.replace('text', 'bg')}" style="width:${val}%"></div></div>
+                    </div>`;
+
+                outputDiv.innerHTML = `
+                    <div class="space-y-4 fade-in">
+                        <div class="grid grid-cols-3 gap-2">
+                            ${scoreBar('Accuracy', data.scores.accuracy, 'text-green-400')}
+                            ${scoreBar('Creative', data.scores.creativity, 'text-purple-400')}
+                            ${scoreBar('Clarity', data.scores.clarity, 'text-blue-400')}
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-white/10">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Feedback</h4>
+                            <div class="text-sm text-gray-300 leading-relaxed">${parseAIText(data.feedback_html)}</div>
+                        </div>
+                        <button onclick="getSandboxChallenge()" class="w-full py-2 bg-indigo-600/20 text-indigo-300 rounded-lg text-sm font-bold border border-indigo-500/30 hover:bg-indigo-600/40 transition">
+                            <i class="fas fa-sync mr-2"></i>New Scenario
+                        </button>
+                    </div>
+                `;
+
+                if (data.scores.accuracy > 70) await addXP(50, "Solved Sandbox Challenge");
+
+            } catch (error) {
+                console.error("Sandbox Analysis Error", error);
+                outputDiv.innerHTML = `<div class="text-red-400 text-center p-4">Analysis Failed. Try again.</div>`;
+            }
+        };
+        // ================= OTHER EVENT HANDLERS =================
+        window.switchAuthTab = (tab) => {
+            const tabs = document.querySelectorAll('#auth-tabs button');
+            tabs.forEach(t => {
+                t.classList.toggle('border-indigo-500', t.textContent.includes(tab === 'login' ? 'Login' : 'Sign Up'));
+                t.classList.toggle('text-gray-400', !t.textContent.includes(tab === 'login' ? 'Login' : 'Sign Up'));
+            });
+            document.getElementById('auth-form').innerHTML = AuthForm(tab);
+        };
+
+        window.handleLogin = () => {
+            const email = $('#email').value;
+            const password = $('#password').value;
+            if (email && password) login(email, password);
+            else Swal.fire('Error', 'Please fill in all fields', 'error');
+        };
+
+        window.handleSignup = () => {
+            const name = $('#name').value;
+            const email = $('#email').value;
+            const password = $('#password').value;
+            if (name && email && password) signup(email, password, name);
+            else Swal.fire('Error', 'Please fill in all fields', 'error');
+        };
+
+        window.showForgotPassword = () => {
+            Swal.fire({
+                title: 'Reset Password',
+                input: 'email',
+                inputPlaceholder: 'Enter your email',
+                showCancelButton: true,
+                confirmButtonText: 'Send Reset Link',
+                background: '#1e293b',
+                color: '#fff'
+            }).then(result => {
+                if (result.isConfirmed && result.value) resetPassword(result.value);
+            });
+        };
+
+        // Fixed startLesson function with video optimization
+        window.startLesson = async (subject, topic) => {
+            if (!store.user) return;
+            store.current = { subject, topic };
+            store.view = 'learning';
+            render();
+
+            try {
+                // Load default video
+                const videos = await getYouTubeVideos(`${topic} ${subject}`);
+                const videoContainer = document.getElementById('video-container');
+
+                if (videoContainer && videos.length > 0) {
+                    // Use the first video object from the array
+                    const firstVideo = videos[0];
+                    // Access ID correctly (videos[0].id)
+                    videoContainer.innerHTML = `
+                        <iframe 
+                            src="https://www.youtube-nocookie.com/embed/${firstVideo.id}?modestbranding=1&rel=0&controls=1&color=white" 
+                            class="w-full h-full absolute inset-0"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                        ></iframe>
+                    `;
+                }
+            } catch (error) { console.error('Video Load Error:', error); }
+
+            // REMOVED: loadNotesForChapter();  <-- This line is deleted to stop auto-gen
+        };
+
+        // ================= DOUBT CHATBOT LOGIC =================
+        window.toggleDoubtChat = () => {
+            const el = document.getElementById('doubt-chat-ui');
+            el.classList.toggle('doubt-chat-visible');
+        };
+
+        window.sendDoubtMessage = async () => {
+            const input = document.getElementById('doubt-input');
+            const container = document.getElementById('doubt-messages');
+            const question = input.value.trim();
+            
+            if (!question) return;
+
+            // User Message
+            container.innerHTML += `
+                <div class="flex justify-end fade-in">
+                    <div class="bg-purple-600/80 text-white px-3 py-2 rounded-lg max-w-[85%] text-xs md:text-sm shadow-md">${question}</div>
+                </div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            // Loading State
+            const loadingId = 'loading-' + Date.now();
+            container.innerHTML += `
+                <div id="${loadingId}" class="flex justify-start fade-in">
+                    <div class="bg-gray-700/50 text-gray-300 px-3 py-2 rounded-lg text-xs flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                </div>`;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                // Construct Prompt
+                const context = `Subject: ${store.current.subject}, Topic: ${store.current.topic}, Level: ${store.user.standard}`;
+                const prompt = `Act as a helpful tutor. Context: [${context}]. Student Question: "${question}". Keep answer concise (under 50 words) and encouraging.`;
+
+                const responseText = await getGeminiContent('sandbox_gen', prompt); // Reuse text generation endpoint
+                
+                document.getElementById(loadingId).remove();
+                
+                container.innerHTML += `
+                    <div class="flex justify-start fade-in">
+                        <div class="bg-gray-800 text-gray-200 border border-gray-600 px-3 py-2 rounded-lg max-w-[90%] text-xs md:text-sm shadow-md">
+                            <strong class="text-purple-400 text-xs block mb-1">AI Tutor</strong>
+                            ${responseText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}
+                        </div>
+                    </div>`;
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                container.innerHTML += `<div class="text-center text-red-400 text-xs mt-2">Error connecting to AI.</div>`;
+            }
+            container.scrollTop = container.scrollHeight;
+        };
+
+        window.markAsCompleted = async () => {
+            if (!store.user || !store.current.subject || !store.current.topic) return;
+
+            const topicKey = `${store.current.subject}:${store.current.topic}`;
+            store.user.completedTopics = store.user.completedTopics || [];
+
+            if (!store.user.completedTopics.includes(topicKey)) {
+                store.user.completedTopics.push(topicKey);
+
+                try {
+                    await db.collection('users').doc(store.user.uid).update({
+                        completedTopics: store.user.completedTopics
+                    });
+
+                    await addXP(50, `Completed: ${store.current.topic}`);
+                    await awardBadge('scholar');
+
+                    Swal.fire({
+                        title: 'Topic Completed!',
+                        text: `You've completed ${store.current.topic}`,
+                        icon: 'success',
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
+                } catch (error) {
+                    console.error('Error marking as completed:', error);
+                }
+            }
+        };
+
+        window.showCustomTestModal = () => {
+            if (!store.user?.standard) {
+                Swal.fire('Error', 'Please select your standard first', 'error');
+                return;
+            }
+
+            const subjects = SYLLABUS[store.user.standard] || {};
+            Swal.fire({
+                title: 'Create Custom Test',
+                html: `
+                    <div class="text-left max-h-96 overflow-y-auto">
+                        ${Object.entries(subjects).map(([subject, topics]) => `
+                            <div class="mb-4">
+                                <h4 class="font-bold mb-2 text-indigo-300">${subject}</h4>
+                                <div class="space-y-1">
+                                    ${topics.map(topic => `
+                                        <label class="flex items-center space-x-2 p-1 hover:bg-white/5 rounded">
+                                            <input type="checkbox" value="${subject}:${topic}" class="rounded">
+                                            <span class="text-sm">${topic}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Start Test',
+                background: '#1e293b',
+                color: '#fff',
+                width: '600px'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const selected = Array.from(document.querySelectorAll('input:checked')).map(cb => cb.value);
+                    if (selected.length > 0) {
+                        startTest('custom', selected);
+                    } else {
+                        Swal.fire('Error', 'Select at least one topic', 'error');
+                    }
+                }
+            });
+        };
+
+        window.selectAnswer = (qIndex, answer) => {
+            store.userAnswers[qIndex] = answer;
+            render();
+        };
+
+        window.prevQuestion = () => {
+            if (store.currentQuestionIndex > 0) {
+                store.currentQuestionIndex--;
+                render();
+            }
+        };
+
+        window.nextQuestion = () => {
+            if (store.currentQuestionIndex < store.testQuestions.length - 1) {
+                store.currentQuestionIndex++;
+                render();
+            }
+        };
+
+        window.goToQuestion = (qIndex) => {
+            store.currentQuestionIndex = qIndex;
+            render();
+        };
+
+        window.checkQuizAnswer = (qIndex, selected, correct) => {
+            if (!store.quizAnswers) store.quizAnswers = [];
+            store.quizAnswers[qIndex] = selected;
+
+            const questionEl = document.querySelector(`.quiz-question[data-idx="${qIndex}"]`);
+            if (questionEl) {
+                const buttons = questionEl.querySelectorAll('button');
+                buttons.forEach((btn, idx) => {
+                    btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+
+                    if (idx === selected) {
+                        if (selected === correct) {
+                            btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        } else {
+                            btn.classList.add('bg-red-600', 'hover:bg-red-700');
+                        }
+                    } else if (idx === correct) {
+                        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    } else {
+                        btn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+                    }
+                });
+
+                const statusBadge = questionEl.querySelector('span');
+                if (statusBadge) {
+                    statusBadge.classList.remove('bg-gray-800', 'bg-green-500/20', 'bg-red-500/20');
+                    statusBadge.classList.add(selected === correct ? 'bg-green-500/20' : 'bg-red-500/20');
+                    statusBadge.textContent = selected === correct ? 'Correct' : 'Incorrect';
+                }
+
+                const explanation = questionEl.querySelector('.explanation');
+                if (explanation) explanation.classList.remove('hidden');
+            }
+
+            if (selected === correct) {
+                addXP(10, `Correct quiz answer: ${store.current.topic}`);
+            }
+        };
+
+        window.resetQuiz = () => {
+            store.quizAnswers = [];
+            loadLearningTab('quiz');
+        };
+        window.initDashboardChart = () => {
+            const canvas = document.getElementById('progressChart');
+            if (!canvas || !store.user) return;
+
+            // Destroy previous instance to prevent "glitching" or overlapping charts
+            if (window.progressChart instanceof Chart) {
+                window.progressChart.destroy();
+            }
+
+            try {
+                // 1. Get History from Local Store (Instant)
+                const history = store.user.xpHistory || [];
+
+                // 2. Generate Last 7 Days Labels
+                const labels = [];
+                const dataPoints = [];
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const dayName = days[d.getDay()];
+                    const dateStr = d.toDateString(); // e.g., "Mon Dec 14 2025"
+
+                    labels.push(dayName);
+
+                    // 3. Sum XP for this specific day
+                    const dailyXP = history
+                        .filter(h => {
+                            // Check both 'date' (ISO) and 'day' (String) formats for backward compatibility
+                            const hDate = new Date(h.date).toDateString();
+                            return hDate === dateStr;
+                        })
+                        .reduce((sum, h) => sum + (h.amount || 0), 0);
+
+                    dataPoints.push(dailyXP);
+                }
+
+                // 4. Empty State Handling (If new user, show a flat line instead of nothing)
+                if (dataPoints.every(v => v === 0)) {
+                    // Optional: Add a small visual baseline so the graph isn't empty
+                    // dataPoints[6] = 5; 
+                }
+
+                // 5. Render Chart
+                const ctx = canvas.getContext('2d');
+
+                // Create Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
+                gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+                window.progressChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'XP Gained',
+                            data: dataPoints,
+                            borderColor: '#818cf8', // Indigo-400
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            tension: 0.4, // Smooth curves
+                            fill: true,
+                            pointBackgroundColor: '#1e293b',
+                            pointBorderColor: '#818cf8',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: '#cbd5e1',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    label: (ctx) => `+${ctx.parsed.y} XP`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#64748b', font: { size: 10 } },
+                                border: { display: false }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#64748b', font: { size: 10 } },
+                                border: { display: false }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Graph Error:", error);
+            }
+        };
+        window.saveProfile = () => {
+            const name = document.getElementById('edit-name').value;
+            const standard = document.getElementById('edit-standard').value;
+            const photo = document.getElementById('edit-photo').value;
+
+            if (name && standard) {
+                updateProfile(name, standard, photo);
+            } else {
+                Swal.fire('Error', 'Please fill in all required fields', 'error');
+            }
+        };
+
+        window.changeClassModal = () => {
+            Swal.fire({
+                title: 'Change Class/Grade',
+                html: `
+                    <div class="text-center">
+                        <p class="mb-4">Select your new class/grade:</p>
+                        <select id="new-class" class="w-full bg-gray-900/50 border border-gray-700 p-3 rounded-xl focus:border-indigo-500 outline-none">
+                            ${Object.keys(SYLLABUS).map(std =>
+                    `<option value="${std}" ${store.user?.standard === std ? 'selected' : ''}>${std}</option>`
+                ).join('')}
+                        </select>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Change',
+                background: '#1e293b',
+                color: '#fff'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const newClass = document.getElementById('new-class').value;
+                    setStandard(newClass);
+                }
+            });
+        };
+
+        // ================= INITIALIZATION =================
+        initAuth();
+        render();
+
+        // Update study time every minute
+        setInterval(() => {
+            if (store.user && store.view === 'learning') {
+                store.user.totalStudyTime = (store.user.totalStudyTime || 0) + 1;
+
+                try {
+                    db.collection('users').doc(store.user.uid).update({
+                        totalStudyTime: store.user.totalStudyTime
+                    });
+
+                    // Award badges based on study time
+                    if (store.user.totalStudyTime === 300) awardBadge('marathon');
+                    if (new Date().getHours() >= 22) awardBadge('night_owl');
+                    if (new Date().getHours() <= 6) awardBadge('early_bird');
+                } catch (error) {
+                    console.error('Error updating study time:', error);
+                }
+            }
+        }, 60000);
+    </script>
+</body>
+
+</html>
